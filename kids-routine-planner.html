@@ -218,15 +218,16 @@
 <div class="save-toast" id="toast">Saved ✓</div>
 
 <script>
-/* ---------------- storage helpers ---------------- */
+/* ---------------- storage helpers (localStorage, works standalone/GitHub Pages) ---------------- */
+const STORAGE_PREFIX = 'starTrail:';
 async function storeGet(key, fallback){
   try{
-    const r = await window.storage.get(key, true);
-    return r ? JSON.parse(r.value) : fallback;
+    const raw = localStorage.getItem(STORAGE_PREFIX+key);
+    return raw !== null ? JSON.parse(raw) : fallback;
   }catch(e){ return fallback; }
 }
 async function storeSet(key, value){
-  try{ await window.storage.set(key, JSON.stringify(value), true); }
+  try{ localStorage.setItem(STORAGE_PREFIX+key, JSON.stringify(value)); }
   catch(e){ console.error('storage set failed', e); }
 }
 
