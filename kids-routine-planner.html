@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Trail — Daily Routines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161B33;
+    --bg-deep:#10142A;
+    --surface:#232A4D;
+    --surface-2:#2E3660;
+    --surface-3:#3A4372;
+    --star:#FFC857;
+    --star-dim:#8A7440;
+    --kid1:#FF6F91;
+    --kid1-dim:#5C3345;
+    --kid2:#4ECDC4;
+    --kid2-dim:#2C5350;
+    --text:#F5F3EA;
+    --text-dim:#A8AFCB;
+    --success:#7BD389;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at 50% -10%, #1F2547 0%, var(--bg) 45%, var(--bg-deep) 100%);
+    color:var(--text);
+    font-family:'Nunito',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  #starfield{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .twinkle{
+    position:absolute;background:#fff;border-radius:50%;
+    animation:tw 3s ease-in-out infinite;
+  }
+  @keyframes tw{0%,100%{opacity:.15;}50%{opacity:.9;}}
+  h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
+  #app{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:20px 18px 60px;min-height:100vh;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn{
+    background:var(--surface-2);color:var(--text);
+    padding:12px 20px;border-radius:14px;font-weight:700;font-size:15px;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn:hover{background:var(--surface-3);}
+  .btn:active{transform:scale(.96);}
+  .btn-primary{background:var(--star);color:#3A2A0A;}
+  .btn-primary:hover{background:#FFD37A;}
+  .btn-ghost{background:transparent;color:var(--text-dim);}
+  .btn-ghost:hover{background:var(--surface);color:var(--text);}
+  .btn-danger{background:#4A2A38;color:#FF9FB4;}
+  .row{display:flex;gap:10px;align-items:center;}
+  .between{justify-content:space-between;}
+  .wrap{flex-wrap:wrap;}
+  .muted{color:var(--text-dim);}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--surface-2);padding:6px 14px;border-radius:999px;font-weight:700;font-size:13px;
+  }
+  input, textarea{
+    font-family:inherit;background:var(--surface-2);border:2px solid var(--surface-3);
+    color:var(--text);border-radius:12px;padding:10px 12px;font-size:15px;width:100%;
+  }
+  input:focus, textarea:focus{outline:none;border-color:var(--star);}
+  .screen{animation:fadein .3s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .hidden{display:none !important;}
+
+  /* HOME */
+  .home-header{text-align:center;margin:18px 0 30px;}
+  .home-header .eyebrow{color:var(--star);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px;}
+  .home-header h1{font-size:34px;margin:6px 0 4px;}
+  .home-header p{color:var(--text-dim);margin:0;font-size:15px;}
+  .kid-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  @media (max-width:480px){.kid-cards{grid-template-columns:1fr;}}
+  .kid-card{
+    border-radius:24px;padding:22px 18px;text-align:center;position:relative;overflow:hidden;
+    border:2px solid transparent;transition:transform .15s ease, border-color .15s ease;
+  }
+  .kid-card:hover{transform:translateY(-3px);}
+  .kid-card:active{transform:scale(.98);}
+  .kid-card .avatar{font-size:52px;display:block;margin-bottom:8px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3));}
+  .kid-card .kname{font-family:'Baloo 2';font-size:22px;font-weight:700;margin:2px 0 8px;}
+  .kid-card .kstars{font-weight:800;font-size:15px;}
+  .kid1-card{background:linear-gradient(160deg, var(--kid1-dim), var(--surface));}
+  .kid1-card:hover{border-color:var(--kid1);}
+  .kid2-card{background:linear-gradient(160deg, var(--kid2-dim), var(--surface));}
+  .kid2-card:hover{border-color:var(--kid2);}
+  .parent-link{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    margin:34px auto 0;color:var(--text-dim);font-size:13px;font-weight:700;
+    background:none;padding:10px;
+  }
+  .parent-link:hover{color:var(--text);}
+
+  /* KID VIEW */
+  .kid-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .back-btn{background:var(--surface);width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-dim);}
+  .back-btn:hover{color:var(--text);}
+  .kid-id{display:flex;align-items:center;gap:10px;}
+  .kid-id .avatar-sm{font-size:30px;}
+  .kid-id h2{margin:0;font-size:22px;}
+  .mode-pill{font-size:12px;padding:5px 12px;}
+  .star-total{
+    display:flex;align-items:center;gap:8px;background:var(--surface);
+    padding:8px 16px;border-radius:999px;font-family:'Baloo 2';font-weight:700;font-size:18px;
+    box-shadow:0 0 0 2px var(--surface-3) inset;
+  }
+  .star-total .icon{font-size:20px;}
+
+  /* trail */
+  .trail-card{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:22px;}
+  .trail-card h3{margin:0 0 14px;font-size:15px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+  #trailSvg{width:100%;height:auto;display:block;}
+  .milestone-label{font-family:'Nunito';font-weight:800;fill:var(--text-dim);}
+  .milestone-label.reached{fill:var(--star);}
+
+  /* routine cards */
+  .routine-card{background:var(--surface);border-radius:var(--radius);padding:18px 18px 8px;margin-bottom:16px;}
+  .routine-card .rhead{display:flex;align-items:center;justify-content:between;gap:10px;margin-bottom:10px;}
+  .routine-card h3{margin:0;font-size:18px;flex:1;}
+  .routine-card .rprogress{font-size:13px;color:var(--text-dim);font-weight:700;}
+  .task-list{list-style:none;margin:0;padding:0;}
+  .task{
+    display:flex;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.06);
+    cursor:pointer;user-select:none;
+  }
+  .task:last-child{border-bottom:none;}
+  .task .icon{font-size:24px;width:32px;text-align:center;flex-shrink:0;}
+  .task .label{flex:1;font-weight:700;font-size:15.5px;}
+  .task.done .label{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--success);}
+  .checkbox{
+    width:28px;height:28px;border-radius:9px;border:2.5px solid var(--surface-3);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    transition:all .15s ease;font-size:15px;
+  }
+  .task.done .checkbox{background:var(--success);border-color:var(--success);color:#123018;}
+  .task:not(.done):hover .checkbox{border-color:var(--star);}
+  .pop{position:relative;}
+  .star-pop{
+    position:absolute;top:-4px;right:2px;font-size:16px;pointer-events:none;
+    animation:popup .7s ease forwards;
+  }
+  @keyframes popup{
+    0%{opacity:0;transform:translateY(0) scale(.5);}
+    20%{opacity:1;transform:translateY(-6px) scale(1.2);}
+    100%{opacity:0;transform:translateY(-34px) scale(1);}
+  }
+
+  /* PARENT LOCK */
+  .lock-box{max-width:340px;margin:80px auto 0;text-align:center;}
+  .lock-box .lockicon{font-size:44px;margin-bottom:6px;}
+  .pin-dots{display:flex;justify-content:center;gap:12px;margin:20px 0;}
+  .pin-dot{width:16px;height:16px;border-radius:50%;background:var(--surface-2);border:2px solid var(--surface-3);}
+  .pin-dot.filled{background:var(--star);border-color:var(--star);}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto;}
+  .key{background:var(--surface);padding:16px 0;border-radius:14px;font-size:20px;font-weight:800;color:var(--text);}
+  .key:hover{background:var(--surface-2);}
+  .key:active{transform:scale(.94);}
+  .pin-error{color:#FF9FB4;font-size:13px;font-weight:700;height:18px;margin-top:8px;}
+
+  /* PARENT PANEL */
+  .tabbar{display:flex;gap:6px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px;}
+  .tab{white-space:nowrap;padding:9px 16px;border-radius:12px;background:var(--surface);color:var(--text-dim);font-weight:700;font-size:14px;}
+  .tab.active{background:var(--star);color:#3A2A0A;}
+  .panel-section{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+  .panel-section h3{margin:0 0 4px;font-size:16px;}
+  .panel-section .hint{color:var(--text-dim);font-size:13px;margin:0 0 14px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;}
+  .switch{width:50px;height:28px;border-radius:999px;background:var(--surface-3);position:relative;flex-shrink:0;transition:background .2s;}
+  .switch.on{background:var(--star);}
+  .switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s;}
+  .switch.on::after{left:25px;}
+  .task-edit-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .task-edit-row input:first-child{width:56px;text-align:center;flex-shrink:0;}
+  .task-order-btns{display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
+  .mini-arrow{width:26px;height:19px;border-radius:6px;background:var(--surface-3);color:var(--text-dim);font-size:11px;display:flex;align-items:center;justify-content:center;}
+  .mini-arrow:hover{background:var(--star);color:#3A2A0A;}
+  .mini-arrow[disabled]{opacity:.25;pointer-events:none;}
+  .remove-x{background:var(--surface-2);width:34px;height:34px;border-radius:10px;flex-shrink:0;color:var(--text-dim);font-size:16px;}
+  .remove-x:hover{background:#4A2A38;color:#FF9FB4;}
+  .add-task-btn{width:100%;margin-top:4px;background:var(--surface-2);border:2px dashed var(--surface-3);color:var(--text-dim);padding:10px;border-radius:12px;font-weight:700;}
+  .add-task-btn:hover{color:var(--text);border-color:var(--star);}
+  .routine-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .routine-chip{padding:8px 14px;border-radius:10px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--text-dim);}
+  .routine-chip.active{background:var(--star);color:#3A2A0A;}
+  .prize-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+  .prize-row input:first-child{width:70px;}
+  .order-row{display:flex;align-items:center;gap:12px;background:var(--surface-2);border-radius:14px;padding:10px 14px;margin-bottom:8px;}
+  .order-num{width:22px;height:22px;border-radius:50%;background:var(--star);color:#3A2A0A;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .order-label{flex:1;font-weight:700;font-size:14.5px;}
+  .adj-btn[disabled]{opacity:.3;pointer-events:none;}
+  .kid-adjust{display:flex;align-items:center;gap:14px;background:var(--surface-2);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+  .kid-adjust .adj-name{flex:1;font-weight:800;font-family:'Baloo 2';}
+  .adj-btn{width:34px;height:34px;border-radius:10px;background:var(--surface-3);font-size:18px;font-weight:800;color:var(--text);}
+  .adj-btn:hover{background:var(--star);color:#3A2A0A;}
+  .save-toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--success);color:#123018;padding:10px 22px;border-radius:999px;font-weight:800;
+    font-size:14px;z-index:50;opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;
+  }
+  .save-toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+<body>
+<div id="starfield"></div>
+<div id="app"></div>
+<div class="save-toast" id="toast">Saved ✓</div>
+
+<script>
+/* ---------------- storage helpers ---------------- */
+async function storeGet(key, fallback){
+  try{
+    const r = await window.storage.get(key, true);
+    return r ? JSON.parse(r.value) : fallback;
+  }catch(e){ return fallback; }
+}
+async function storeSet(key, value){
+  try{ await window.storage.set(key, JSON.stringify(value), true); }
+  catch(e){ console.error('storage set failed', e); }
+}
+
+/* ---------------- defaults ---------------- */
+const DEFAULT_CONFIG = {
+  kids: [
+    {id:'k1', name:'Mira', avatar:'🦊', accent:'kid1', age:10},
+    {id:'k2', name:'Taim', avatar:'🐻', accent:'kid2', age:6}
+  ],
+  pin: '0000',
+  holidayMode: false,
+  routineOrder: {
+    school: ['morning_school','afterschool_school','bedtime_school'],
+    holiday: ['morning_holiday','afterschool_holiday','bedtime_holiday']
+  },
+  routines: {
+    morning_school:  {label:'Morning Routine', tasks:[
+      {id:'t1', icon:'⏰', label:'Wake up'},
+      {id:'t2', icon:'🪥', label:'Brush teeth'},
+      {id:'t3', icon:'👕', label:'Get dressed'},
+      {id:'t4', icon:'🥣', label:'Eat breakfast'},
+      {id:'t5', icon:'🎒', label:'Pack school bag'},
+      {id:'t6', icon:'👟', label:'Put on shoes'}
+    ]},
+    morning_holiday: {label:'Morning Routine', tasks:[
+      {id:'t1', icon:'⏰', label:'Wake up'},
+      {id:'t2', icon:'🪥', label:'Brush teeth'},
+      {id:'t3', icon:'👕', label:'Get dressed'},
+      {id:'t4', icon:'🥣', label:'Eat breakfast'}
+    ]},
+    afterschool_school: {label:'After School', tasks:[
+      {id:'t1', icon:'🧼', label:'Wash hands'},
+      {id:'t2', icon:'🍎', label:'Have a snack'},
+      {id:'t3', icon:'📚', label:'Homework / reading'},
+      {id:'t4', icon:'🎒', label:'Tidy school bag'},
+      {id:'t5', icon:'🧸', label:'Free play'}
+    ]},
+    afterschool_holiday: {label:'Afternoon', tasks:[
+      {id:'t1', icon:'🧸', label:'Free play'},
+      {id:'t2', icon:'🧩', label:'Reading or puzzle time'},
+      {id:'t3', icon:'🧹', label:'Tidy up toys'}
+    ]},
+    bedtime_school: {label:'Bedtime Routine', tasks:[
+      {id:'t1', icon:'🎒', label:'Pack bag for tomorrow'},
+      {id:'t2', icon:'🛁', label:'Bath / shower'},
+      {id:'t3', icon:'🪥', label:'Brush teeth'},
+      {id:'t4', icon:'🌙', label:'Put on pajamas'},
+      {id:'t5', icon:'💤', label:'Lights out on time'}
+    ]},
+    bedtime_holiday: {label:'Bedtime Routine', tasks:[
+      {id:'t1', icon:'🛁', label:'Bath / shower'},
+      {id:'t2', icon:'🪥', label:'Brush teeth'},
+      {id:'t3', icon:'🌙', label:'Put on pajamas'},
+      {id:'t4', icon:'📖', label:'Story time'}
+    ]}
+  },
+  prizes: [
+    {threshold:10, reward:'Pick dessert or extra 15 min screen time'},
+    {threshold:25, reward:'A toy or a fun outing'},
+    {threshold:50, reward:'The big prize they choose in advance'}
+  ]
+};
+
+let CONFIG = null;
+let STARS = {}; // {kidId: number}
+let PROGRESS = {}; // cache of today's progress per kid: {kidId: {taskId:bool}}
+let state = { screen:'home', kidId:null, parentTab:'kids', pinBuffer:'' };
+
+const ROUTINE_KEYS_SCHOOL = ['morning_school','afterschool_school','bedtime_school'];
+const ROUTINE_KEYS_HOLIDAY = ['morning_holiday','afterschool_holiday','bedtime_holiday'];
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function progressKey(kidId){ return 'progress:'+kidId+':'+todayStr(); }
+
+async function init(){
+  CONFIG = await storeGet('family-config', DEFAULT_CONFIG);
+  for(const kid of CONFIG.kids){
+    STARS[kid.id] = await storeGet('stars:'+kid.id, 0);
+    PROGRESS[kid.id] = await storeGet(progressKey(kid.id), {});
+  }
+  buildStarfield();
+  render();
+}
+function buildStarfield(){
+  const el = document.getElementById('starfield');
+  let html='';
+  for(let i=0;i<50;i++){
+    const size = (Math.random()*2+1).toFixed(1);
+    const top = Math.random()*100;
+    const left = Math.random()*100;
+    const delay = (Math.random()*3).toFixed(2);
+    html += `<div class="twinkle" style="width:${size}px;height:${size}px;top:${top}%;left:${left}%;animation-delay:${delay}s;"></div>`;
+  }
+  el.innerHTML = html;
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg || 'Saved ✓';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- render router ---------------- */
+function render(){
+  const app = document.getElementById('app');
+  if(state.screen==='home') app.innerHTML = renderHome();
+  else if(state.screen==='kid') app.innerHTML = renderKid(state.kidId);
+  else if(state.screen==='lock') app.innerHTML = renderLock();
+  else if(state.screen==='parent') app.innerHTML = renderParent();
+  wireEvents();
+}
+
+/* ---------------- HOME ---------------- */
+function renderHome(){
+  const cards = CONFIG.kids.map(k => `
+    <button class="kid-card ${k.accent}-card" data-goto-kid="${k.id}">
+      <span class="avatar">${k.avatar}</span>
+      <div class="kname">${esc(k.name)}</div>
+      <div class="kstars" style="color:var(--star)">⭐ ${STARS[k.id]||0} stars</div>
+    </button>
+  `).join('');
+  return `
+  <div class="screen">
+    <div class="home-header">
+      <div class="eyebrow">Star Trail</div>
+      <h1>Who's checking in?</h1>
+      <p>${CONFIG.holidayMode ? 'Holiday mode is on ☀️' : 'School day routines 🎒'}</p>
+    </div>
+    <div class="kid-cards">${cards}</div>
+    <button class="parent-link" data-goto="lock">🔒 Parent settings</button>
+  </div>`;
+}
+
+/* ---------------- KID VIEW ---------------- */
+function currentRoutineKeys(){
+  if(!CONFIG.routineOrder){
+    CONFIG.routineOrder = { school: ROUTINE_KEYS_SCHOOL.slice(), holiday: ROUTINE_KEYS_HOLIDAY.slice() };
+  }
+  return CONFIG.holidayMode ? CONFIG.routineOrder.holiday : CONFIG.routineOrder.school;
+}
+function renderTrail(kid){
+  const total = STARS[kid.id]||0;
+  const prizes = CONFIG.prizes.slice().sort((a,b)=>a.threshold-b.threshold);
+  const maxT = prizes.length ? prizes[prizes.length-1].threshold : 50;
+  const w = 640, h = 90, pad = 30;
+  const usable = w - pad*2;
+  const pct = Math.min(total/maxT,1);
+  let path = `M ${pad} ${h/2}`;
+  const segments = 4;
+  for(let i=1;i<=segments;i++){
+    const x = pad + (usable/segments)*i;
+    const y = h/2 + (i%2===0 ? -22 : 22);
+    path += ` Q ${pad + (usable/segments)*(i-0.5)} ${i%2===0?22:-22+h/2}, ${x} ${y}`;
+  }
+  let milestones = prizes.map(p=>{
+    const mx = pad + usable*Math.min(p.threshold/maxT,1);
+    const reached = total >= p.threshold;
+    return `<g>
+      <circle cx="${mx}" cy="${h/2}" r="9" fill="${reached?'var(--star)':'#3A4372'}" stroke="${reached?'#FFD37A':'#4A5488'}" stroke-width="2"/>
+      <text x="${mx}" y="${h-6}" font-size="11" text-anchor="middle" class="milestone-label ${reached?'reached':''}">${p.threshold}</text>
+    </g>`;
+  }).join('');
+  const tokenX = pad + usable*pct;
+  return `
+  <div class="trail-card">
+    <h3>Star trail — ${total} / ${maxT}${total>=maxT?' 🎉 Goal reached!':''}</h3>
+    <svg id="trailSvg" viewBox="0 0 ${w} ${h}">
+      <path d="M ${pad} ${h/2} L ${w-pad} ${h/2}" stroke="#3A4372" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="1 10"/>
+      <line x1="${pad}" y1="${h/2}" x2="${tokenX}" y2="${h/2}" stroke="var(--star)" stroke-width="4" stroke-linecap="round"/>
+      ${milestones}
+      <text x="${tokenX}" y="${h/2-16}" font-size="22" text-anchor="middle">${kid.avatar}</text>
+    </svg>
+  </div>`;
+}
+function renderRoutineCard(kid, routineKey){
+  const routine = CONFIG.routines[routineKey];
+  const prog = PROGRESS[kid.id] || {};
+  const doneCount = routine.tasks.filter(t=>prog[t.id]).length;
+  const items = routine.tasks.map(t=>{
+    const done = !!prog[t.id];
+    return `<li class="task ${done?'done':''} pop" data-task="${t.id}" data-routine="${routineKey}" data-kid="${kid.id}">
+      <span class="icon">${t.icon}</span>
+      <span class="label">${esc(t.label)}</span>
+      <span class="checkbox">${done?'✓':''}</span>
+    </li>`;
+  }).join('');
+  return `
+  <div class="routine-card">
+    <div class="rhead">
+      <h3>${esc(routine.label)}</h3>
+      <span class="rprogress">${doneCount}/${routine.tasks.length}</span>
+    </div>
+    <ul class="task-list">${items}</ul>
+  </div>`;
+}
+function renderKid(kidId){
+  const kid = CONFIG.kids.find(k=>k.id===kidId);
+  if(!kid) return renderHome();
+  const keys = currentRoutineKeys();
+  const cards = keys.map(k=>renderRoutineCard(kid,k)).join('');
+  return `
+  <div class="screen">
+    <div class="kid-topbar">
+      <button class="back-btn" data-goto="home">←</button>
+      <div class="kid-id">
+        <span class="avatar-sm">${kid.avatar}</span>
+        <div>
+          <h2>${esc(kid.name)}</h2>
+          <span class="pill mode-pill">${CONFIG.holidayMode?'☀️ Holiday':'🎒 School day'}</span>
+        </div>
+      </div>
+      <div class="star-total"><span class="icon">⭐</span>${STARS[kid.id]||0}</div>
+    </div>
+    ${renderTrail(kid)}
+    ${cards}
+  </div>`;
+}
+
+/* ---------------- PARENT LOCK ---------------- */
+function renderLock(){
+  const dots = Array.from({length:4}).map((_,i)=>`<div class="pin-dot ${i<state.pinBuffer.length?'filled':''}"></div>`).join('');
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  const keyHtml = keys.map(k=>{
+    if(k==='') return `<div></div>`;
+    return `<button class="key" data-pinkey="${k}">${k}</button>`;
+  }).join('');
+  return `
+  <div class="screen">
+    <div class="lock-box">
+      <div class="lockicon">🔒</div>
+      <h2>Parent settings</h2>
+      <p class="muted">Enter the 4-digit PIN</p>
+      <div class="pin-dots">${dots}</div>
+      <div class="pin-error">${state.pinError||''}</div>
+      <div class="keypad">${keyHtml}</div>
+      <button class="btn btn-ghost" style="margin-top:22px" data-goto="home">Cancel</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------- PARENT PANEL ---------------- */
+const ROUTINE_ORDER = [
+  ['morning_school','Morning · School'], ['morning_holiday','Morning · Holiday'],
+  ['afterschool_school','After School'], ['afterschool_holiday','Afternoon · Holiday'],
+  ['bedtime_school','Bedtime · School'], ['bedtime_holiday','Bedtime · Holiday']
+];
+function renderParent(){
+  const tabs = [['kids','Kids'],['routines','Routines'],['prizes','Prizes'],['mode','Mode & PIN']];
+  const tabHtml = tabs.map(([k,l])=>`<button class="tab ${state.parentTab===k?'active':''}" data-ptab="${k}">${l}</button>`).join('');
+  let body='';
+  if(state.parentTab==='kids') body = renderParentKids();
+  else if(state.parentTab==='routines') body = renderParentRoutines();
+  else if(state.parentTab==='prizes') body = renderParentPrizes();
+  else if(state.parentTab==='mode') body = renderParentMode();
+  return `
+  <div class="screen">
+    <div class="kid-topbar">
+      <button class="back-btn" data-goto="home">←</button>
+      <h2 style="margin:0">Parent Settings</h2>
+      <span style="width:40px"></span>
+    </div>
+    <div class="tabbar">${tabHtml}</div>
+    ${body}
+  </div>`;
+}
+function renderParentKids(){
+  const rows = CONFIG.kids.map(k=>`
+    <div class="panel-section">
+      <div class="field-row">
+        <div class="field"><label>Avatar (emoji)</label><input data-kidfield="avatar" data-kid="${k.id}" value="${esc(k.avatar)}"></div>
+        <div class="field" style="flex:2"><label>Name</label><input data-kidfield="name" data-kid="${k.id}" value="${esc(k.name)}"></div>
+      </div>
+      <div class="kid-adjust">
+        <span class="adj-name">⭐ ${STARS[k.id]||0} stars</span>
+        <button class="adj-btn" data-adjstar="-1" data-kid="${k.id}">−</button>
+        <button class="adj-btn" data-adjstar="1" data-kid="${k.id}">+</button>
+        <button class="btn btn-danger" data-resetstars="${k.id}" style="font-size:12px;padding:8px 12px;">Reset</button>
+      </div>
+    </div>
+  `).join('');
+  return rows + `<button class="btn btn-primary" data-savekids="1">Save kid info</button>`;
+}
+function renderRoutineOrderSection(){
+  if(!CONFIG.routineOrder){
+    CONFIG.routineOrder = { school: ROUTINE_KEYS_SCHOOL.slice(), holiday: ROUTINE_KEYS_HOLIDAY.slice() };
+  }
+  const groups = [['school','School Day order'],['holiday','Holiday order']];
+  return groups.map(([g,title])=>{
+    const order = CONFIG.routineOrder[g];
+    const rows = order.map((key,i)=>`
+      <div class="order-row">
+        <span class="order-num">${i+1}</span>
+        <span class="order-label">${esc(CONFIG.routines[key].label)}</span>
+        <div class="row" style="gap:6px">
+          <button class="adj-btn" data-moveorder="${g}:${key}:up" ${i===0?'disabled':''}>↑</button>
+          <button class="adj-btn" data-moveorder="${g}:${key}:down" ${i===order.length-1?'disabled':''}>↓</button>
+        </div>
+      </div>`).join('');
+    return `<div class="panel-section"><h3>${title}</h3><p class="hint">This is the order each kid sees their routines in.</p>${rows}</div>`;
+  }).join('');
+}
+function renderParentRoutines(){
+  const key = state.routineEdit || ROUTINE_ORDER[0][0];
+  const chips = ROUTINE_ORDER.map(([k,l])=>`<button class="routine-chip ${key===k?'active':''}" data-routinechip="${k}">${l}</button>`).join('');
+  const routine = CONFIG.routines[key];
+  const rows = routine.tasks.map((t,i)=>`
+    <div class="task-edit-row" data-taskrow="${t.id}">
+      <div class="task-order-btns">
+        <button class="mini-arrow" data-movetask="${key}:${t.id}:up" ${i===0?'disabled':''}>↑</button>
+        <button class="mini-arrow" data-movetask="${key}:${t.id}:down" ${i===routine.tasks.length-1?'disabled':''}>↓</button>
+      </div>
+      <input data-taskfield="icon" data-task="${t.id}" value="${esc(t.icon)}">
+      <input data-taskfield="label" data-task="${t.id}" value="${esc(t.label)}">
+      <button class="remove-x" data-removetask="${t.id}">✕</button>
+    </div>
+  `).join('');
+  return renderRoutineOrderSection() + `
+  <div class="panel-section">
+    <h3>Edit routine tasks</h3>
+    <p class="hint">Tap a routine to edit its checklist. Icon can be any emoji.</p>
+    <div class="routine-select">${chips}</div>
+    <div data-taskrows>${rows}</div>
+    <button class="add-task-btn" data-addtask="${key}">+ Add task</button>
+    <div style="margin-top:14px"><button class="btn btn-primary" data-saveroutine="${key}">Save routine</button></div>
+  </div>`;
+}
+function renderParentPrizes(){
+  const rows = CONFIG.prizes.map((p,i)=>`
+    <div class="prize-row" data-prizerow="${i}">
+      <input data-prizefield="threshold" data-idx="${i}" type="number" value="${p.threshold}">
+      <input data-prizefield="reward" data-idx="${i}" value="${esc(p.reward)}">
+      <button class="remove-x" data-removeprize="${i}">✕</button>
+    </div>
+  `).join('');
+  return `
+  <div class="panel-section">
+    <h3>Prize milestones</h3>
+    <p class="hint">Set how many stars unlock each reward.</p>
+    ${rows}
+    <button class="add-task-btn" data-addprize="1">+ Add prize tier</button>
+    <div style="margin-top:14px"><button class="btn btn-primary" data-saveprizes="1">Save prizes</button></div>
+  </div>`;
+}
+function renderParentMode(){
+  return `
+  <div class="panel-section">
+    <h3>Holiday mode</h3>
+    <p class="hint">Switches both kids' routines between school-day and holiday versions.</p>
+    <div class="toggle-row">
+      <span>${CONFIG.holidayMode?'Holiday routines active ☀️':'School-day routines active 🎒'}</span>
+      <div class="switch ${CONFIG.holidayMode?'on':''}" data-toggle="holidayMode"></div>
+    </div>
+  </div>
+  <div class="panel-section">
+    <h3>Change PIN</h3>
+    <p class="hint">4 digits. Kids won't be able to see this screen without it.</p>
+    <div class="field"><input id="newPinInput" maxlength="4" inputmode="numeric" placeholder="${CONFIG.pin}"></div>
+    <button class="btn btn-primary" data-savepin="1">Update PIN</button>
+  </div>
+  <div class="panel-section">
+    <h3>Reset today's checklist</h3>
+    <p class="hint">Clears today's checkmarks for both kids without touching their total stars.</p>
+    <button class="btn btn-danger" data-resettoday="1">Reset today</button>
+  </div>`;
+}
+
+/* ---------------- events ---------------- */
+function wireEvents(){
+  document.querySelectorAll('[data-goto]').forEach(el=>{
+    el.onclick = ()=>{ state.screen = el.dataset.goto; state.pinBuffer=''; state.pinError=''; render(); };
+  });
+  document.querySelectorAll('[data-goto-kid]').forEach(el=>{
+    el.onclick = ()=>{ state.kidId = el.dataset.gotoKid; state.screen='kid'; render(); };
+  });
+  document.querySelectorAll('[data-pinkey]').forEach(el=>{
+    el.onclick = ()=>handlePinKey(el.dataset.pinkey);
+  });
+  document.querySelectorAll('.task').forEach(el=>{
+    el.onclick = ()=>toggleTask(el.dataset.kid, el.dataset.routine, el.dataset.task, el);
+  });
+  document.querySelectorAll('[data-ptab]').forEach(el=>{
+    el.onclick = ()=>{ state.parentTab = el.dataset.ptab; render(); };
+  });
+  document.querySelectorAll('[data-routinechip]').forEach(el=>{
+    el.onclick = ()=>{ state.routineEdit = el.dataset.routinechip; render(); };
+  });
+  document.querySelectorAll('[data-addtask]').forEach(el=>{
+    el.onclick = ()=>{
+      const key = el.dataset.addtask;
+      const id = 't'+Date.now();
+      CONFIG.routines[key].tasks.push({id, icon:'⭐', label:'New task'});
+      render();
+    };
+  });
+  document.querySelectorAll('[data-removetask]').forEach(el=>{
+    el.onclick = ()=>{
+      const key = state.routineEdit || ROUTINE_ORDER[0][0];
+      CONFIG.routines[key].tasks = CONFIG.routines[key].tasks.filter(t=>t.id!==el.dataset.removetask);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-saveroutine]').forEach(el=>{
+    el.onclick = async ()=>{
+      const key = el.dataset.saveroutine;
+      document.querySelectorAll(`[data-taskfield][data-task]`).forEach(inp=>{
+        const t = CONFIG.routines[key].tasks.find(x=>x.id===inp.dataset.task);
+        if(t) t[inp.dataset.taskfield] = inp.value;
+      });
+      await storeSet('family-config', CONFIG);
+      toast('Routine saved ✓');
+    };
+  });
+  document.querySelectorAll('[data-addprize]').forEach(el=>{
+    el.onclick = ()=>{ CONFIG.prizes.push({threshold:0, reward:'New prize'}); render(); };
+  });
+  document.querySelectorAll('[data-removeprize]').forEach(el=>{
+    el.onclick = ()=>{ CONFIG.prizes.splice(parseInt(el.dataset.removeprize),1); render(); };
+  });
+  document.querySelectorAll('[data-saveprizes]').forEach(el=>{
+    el.onclick = async ()=>{
+      document.querySelectorAll('[data-prizefield="threshold"]').forEach(inp=>{
+        CONFIG.prizes[inp.dataset.idx].threshold = parseInt(inp.value)||0;
+      });
+      document.querySelectorAll('[data-prizefield="reward"]').forEach(inp=>{
+        CONFIG.prizes[inp.dataset.idx].reward = inp.value;
+      });
+      await storeSet('family-config', CONFIG);
+      toast('Prizes saved ✓');
+    };
+  });
+  document.querySelectorAll('[data-savekids]').forEach(el=>{
+    el.onclick = async ()=>{
+      document.querySelectorAll('[data-kidfield]').forEach(inp=>{
+        const kid = CONFIG.kids.find(k=>k.id===inp.dataset.kid);
+        if(kid) kid[inp.dataset.kidfield] = inp.value;
+      });
+      await storeSet('family-config', CONFIG);
+      toast('Saved ✓');
+    };
+  });
+  document.querySelectorAll('[data-adjstar]').forEach(el=>{
+    el.onclick = async ()=>{
+      const kidId = el.dataset.kid;
+      const delta = parseInt(el.dataset.adjstar);
+      STARS[kidId] = Math.max(0,(STARS[kidId]||0)+delta);
+      await storeSet('stars:'+kidId, STARS[kidId]);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-resetstars]').forEach(el=>{
+    el.onclick = async ()=>{
+      const kidId = el.dataset.resetstars;
+      if(!confirm("Reset this kid's total stars to 0?")) return;
+      STARS[kidId]=0;
+      await storeSet('stars:'+kidId, 0);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-movetask]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [routineKey, taskId, dir] = el.dataset.movetask.split(':');
+      document.querySelectorAll('[data-taskfield]').forEach(inp=>{
+        const t = CONFIG.routines[routineKey].tasks.find(x=>x.id===inp.dataset.task);
+        if(t) t[inp.dataset.taskfield] = inp.value;
+      });
+      const tasks = CONFIG.routines[routineKey].tasks;
+      const i = tasks.findIndex(t=>t.id===taskId);
+      const j = dir==='up' ? i-1 : i+1;
+      if(j<0 || j>=tasks.length) return;
+      [tasks[i], tasks[j]] = [tasks[j], tasks[i]];
+      await storeSet('family-config', CONFIG);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-moveorder]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [g, key, dir] = el.dataset.moveorder.split(':');
+      const order = CONFIG.routineOrder[g];
+      const i = order.indexOf(key);
+      const j = dir==='up' ? i-1 : i+1;
+      if(j<0 || j>=order.length) return;
+      [order[i], order[j]] = [order[j], order[i]];
+      await storeSet('family-config', CONFIG);
+      render();
+    };
+  });
+  const toggleEl = document.querySelector('[data-toggle="holidayMode"]');
+  if(toggleEl){
+    toggleEl.onclick = async ()=>{
+      CONFIG.holidayMode = !CONFIG.holidayMode;
+      await storeSet('family-config', CONFIG);
+      render();
+    };
+  }
+  const savePinBtn = document.querySelector('[data-savepin]');
+  if(savePinBtn){
+    savePinBtn.onclick = async ()=>{
+      const val = document.getElementById('newPinInput').value.trim();
+      if(!/^\d{4}$/.test(val)){ toast('PIN must be 4 digits'); return; }
+      CONFIG.pin = val;
+      await storeSet('family-config', CONFIG);
+      toast('PIN updated ✓');
+    };
+  }
+  const resetTodayBtn = document.querySelector('[data-resettoday]');
+  if(resetTodayBtn){
+    resetTodayBtn.onclick = async ()=>{
+      if(!confirm("Clear today's checkmarks for both kids?")) return;
+      for(const kid of CONFIG.kids){
+        PROGRESS[kid.id] = {};
+        await storeSet(progressKey(kid.id), {});
+      }
+      toast('Today reset ✓');
+    };
+  }
+}
+
+function handlePinKey(k){
+  if(k==='⌫'){ state.pinBuffer = state.pinBuffer.slice(0,-1); render(); return; }
+  if(state.pinBuffer.length>=4) return;
+  state.pinBuffer += k;
+  render();
+  if(state.pinBuffer.length===4){
+    setTimeout(()=>{
+      if(state.pinBuffer === CONFIG.pin){
+        state.screen='parent'; state.pinBuffer=''; state.pinError='';
+      } else {
+        state.pinError = 'Wrong PIN, try again';
+        state.pinBuffer='';
+      }
+      render();
+    }, 150);
+  }
+}
+
+async function toggleTask(kidId, routineKey, taskId, el){
+  if(!PROGRESS[kidId]) PROGRESS[kidId] = {};
+  const wasDone = !!PROGRESS[kidId][taskId];
+  PROGRESS[kidId][taskId] = !wasDone;
+  STARS[kidId] = Math.max(0, (STARS[kidId]||0) + (wasDone ? -1 : 1));
+  await storeSet(progressKey(kidId), PROGRESS[kidId]);
+  await storeSet('stars:'+kidId, STARS[kidId]);
+  if(!wasDone){
+    const popEl = document.createElement('span');
+    popEl.className='star-pop';
+    popEl.textContent='+1 ⭐';
+    el.appendChild(popEl);
+    setTimeout(()=>popEl.remove(), 700);
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
