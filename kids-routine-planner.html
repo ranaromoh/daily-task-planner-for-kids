@@ -428,10 +428,11 @@ function startLiveSync(){
 /* ---------------- defaults ---------------- */
 const DEFAULT_CONFIG = {
   kids: [
-    {id:'k1', name:'Mira', avatar:'🦊', accent:'kid1', age:10},
-    {id:'k2', name:'Taim', avatar:'🐻', accent:'kid2', age:6}
+    {id:'k1', name:'Mira', avatar:'🦊', accent:'kid1', age:10, pin:'1111'},
+    {id:'k2', name:'Taim', avatar:'🐻', accent:'kid2', age:6, pin:'2222'}
   ],
   pin: '0000',
+  hideStarsFromKids: true,
   holidayMode: false,
   routineOrder: {
     school: ['morning_school','afterschool_school','afternoon_school','bedtime_school'],
@@ -578,6 +579,9 @@ function isWeekendToday(){
 function effectiveHolidayMode(){
   return !!CONFIG.holidayMode || isWeekendToday();
 }
+function starsVisibleToKids(){
+  return !CONFIG.hideStarsFromKids;
+}
 function timeToMinutes(hhmm){
   const [h,m] = hhmm.split(':').map(Number);
   return h*60+m;
@@ -639,6 +643,13 @@ function migrateConfig(cfg){
     cfg.behaviorReasons = JSON.parse(JSON.stringify(DEFAULT_CONFIG.behaviorReasons));
     changed = true;
   }
+  if(cfg.hideStarsFromKids===undefined){
+    cfg.hideStarsFromKids = true;
+    changed = true;
+  }
+  cfg.kids.forEach((k,i)=>{
+    if(!k.pin){ k.pin = String((i+1)).repeat(4); changed = true; }
+  });
   if(!cfg.contentVersion || cfg.contentVersion < 2){
     cfg.routines.morning_school = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.morning_school));
     cfg.routines.morning_holiday = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.morning_holiday));
@@ -721,6 +732,7 @@ function render(){
   else if(state.screen==='deductions') app.innerHTML = renderKidDeductions(state.kidId);
   else if(state.screen==='avatarbuilder') app.innerHTML = renderAvatarBuilder(state.kidId);
   else if(state.screen==='lock') app.innerHTML = renderLock();
+  else if(state.screen==='kidlock') app.innerHTML = renderKidLock(state.kidId);
   else if(state.screen==='parent') app.innerHTML = renderParent();
   wireEvents();
 }
@@ -728,10 +740,10 @@ function render(){
 /* ---------------- HOME ---------------- */
 function renderHome(){
   const cards = CONFIG.kids.map(k => `
-    <button class="kid-card ${k.accent}-card" data-goto-kid="${k.id}">
+    <button class="kid-card ${k.accent}-card" data-enter-kid="${k.id}">
       <span class="avatar">${renderAvatar(k,52)}</span>
       <div class="kname">${esc(k.name)}</div>
-      <div class="kstars" style="color:var(--star)">⭐ ${STARS[k.id]||0} stars</div>
+      ${starsVisibleToKids() ? `<div class="kstars" style="color:var(--star)">⭐ ${STARS[k.id]||0} stars</div>` : ''}
     </button>
   `).join('');
   return `
@@ -778,7 +790,7 @@ function renderTrail(kid){
   const tokenX = pad + usable*pct;
   return `
   <div class="trail-card">
-    <h3>Star trail — ${total} / ${maxT}${total>=maxT?' 🎉 Goal reached!':''}</h3>
+    <h3>${starsVisibleToKids() ? `Star trail — ${total} / ${maxT}${total>=maxT?' 🎉 Goal reached!':''}` : 'Star trail'}</h3>
     <svg id="trailSvg" viewBox="0 0 ${w} ${h}">
       <path d="M ${pad} ${h/2} L ${w-pad} ${h/2}" stroke="#3A4372" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="1 10"/>
       <line x1="${pad}" y1="${h/2}" x2="${tokenX}" y2="${h/2}" stroke="var(--star)" stroke-width="4" stroke-linecap="round"/>
@@ -787,7 +799,7 @@ function renderTrail(kid){
     </svg>
   </div>`;
 }
-function renderWeekBars(kidId){
+function renderWeekBars(kidId, hideNumbers){
   const dates = last7Dates();
   const hist = HISTORY[kidId] || {};
   const vals = dates.map(d=>Math.max(0, hist[d]||0));
@@ -797,12 +809,13 @@ function renderWeekBars(kidId){
     const v = vals[i];
     const h = v===0 ? 4 : Math.round((v/max)*110)+4;
     return `<div class="week-bar-col">
-      <span class="week-bar-val">${v>0?v:''}</span>
+      <span class="week-bar-val">${(!hideNumbers && v>0)?v:''}</span>
       <div class="week-bar ${v===0?'zero':''}" style="height:${h}px"></div>
       <span class="week-bar-day">${dayLabel(d)}</span>
     </div>`;
   }).join('');
-  return `<div class="week-bars">${cols}</div><div class="week-total">⭐ ${total} stars this week</div>`;
+  const totalLine = hideNumbers ? `<div class="week-total">Keep the streak going! 🌟</div>` : `<div class="week-total">⭐ ${total} stars this week</div>`;
+  return `<div class="week-bars">${cols}</div>${totalLine}`;
 }
 function renderRoutineCard(kid, routineKey){
   const routine = CONFIG.routines[routineKey];
@@ -862,7 +875,7 @@ function renderPrizesPanel(kid){
     const isPending = pending.some(c=>c.threshold===p.threshold);
     let status, action;
     if(!reached){
-      status = `Need ${p.threshold-stars} more ⭐`;
+      status = starsVisibleToKids() ? `Need ${p.threshold-stars} more ⭐` : '🔒 Keep going!';
       action = '';
     } else if(isPending){
       status = 'Waiting for approval ⏳';
@@ -922,7 +935,7 @@ function renderKid(kidId){
       </div>
       <div class="row" style="gap:8px">
         ${streak>0?`<div class="streak-badge">🔥${streak}</div>`:''}
-        <div class="star-total"><span class="icon">⭐</span>${STARS[kid.id]||0}</div>
+        ${starsVisibleToKids() ? `<div class="star-total"><span class="icon">⭐</span>${STARS[kid.id]||0}</div>` : ''}
       </div>
     </div>
     ${avatarPicker}
@@ -952,7 +965,7 @@ function renderKidHistory(kidId){
     ${streak>0?`<div class="trail-card" style="text-align:center"><span class="streak-badge">🔥 ${streak}-day perfect streak!</span></div>`:''}
     <div class="trail-card">
       <h3>Stars earned each day</h3>
-      ${renderWeekBars(kid.id)}
+      ${renderWeekBars(kid.id, !starsVisibleToKids())}
     </div>
   </div>`;
 }
@@ -1079,6 +1092,28 @@ function renderLock(){
     </div>
   </div>`;
 }
+function renderKidLock(kidId){
+  const kid = CONFIG.kids.find(k=>k.id===kidId);
+  if(!kid) return renderHome();
+  const dots = Array.from({length:4}).map((_,i)=>`<div class="pin-dot ${i<state.pinBuffer.length?'filled':''}"></div>`).join('');
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  const keyHtml = keys.map(k=>{
+    if(k==='') return `<div></div>`;
+    return `<button class="key" data-pinkey="${k}">${k}</button>`;
+  }).join('');
+  return `
+  <div class="screen">
+    <div class="lock-box">
+      <div class="lockicon">${renderAvatar(kid,44)}</div>
+      <h2>${esc(kid.name)}'s passcode</h2>
+      <p class="muted">Enter your 4-digit code</p>
+      <div class="pin-dots">${dots}</div>
+      <div class="pin-error">${state.pinError||''}</div>
+      <div class="keypad">${keyHtml}</div>
+      <button class="btn btn-ghost" style="margin-top:22px" data-goto="home">Cancel</button>
+    </div>
+  </div>`;
+}
 
 /* ---------------- PARENT PANEL ---------------- */
 const ROUTINE_ORDER = [
@@ -1115,6 +1150,7 @@ function renderParentKids(){
         <div class="field"><label>Avatar (emoji)</label><input data-kidfield="avatar" data-kid="${k.id}" value="${esc(k.avatar)}"></div>
         <div class="field" style="flex:2"><label>Name</label><input data-kidfield="name" data-kid="${k.id}" value="${esc(k.name)}"></div>
       </div>
+      <div class="field"><label>Passcode (4 digits — used to open their portal)</label><input data-kidfield="pin" data-kid="${k.id}" maxlength="4" inputmode="numeric" value="${esc(k.pin||'')}"></div>
       <div class="kid-adjust">
         <span class="adj-name">⭐ ${STARS[k.id]||0} stars</span>
         <button class="adj-btn" data-adjstar="-1" data-kid="${k.id}">−</button>
@@ -1284,6 +1320,14 @@ function renderParentMode(){
     </div>
   </div>
   <div class="panel-section">
+    <h3>Star totals</h3>
+    <p class="hint">Hide each kid's total star count from their own screen — keeps the trail and prizes visible without a number to compare against a sibling.</p>
+    <div class="toggle-row">
+      <span>${CONFIG.hideStarsFromKids?'Hidden from kids 🙈':'Visible to kids ⭐'}</span>
+      <div class="switch ${CONFIG.hideStarsFromKids?'on':''}" data-toggle="hideStars"></div>
+    </div>
+  </div>
+  <div class="panel-section">
     <h3>Rest day</h3>
     <p class="hint">Turns off today's completion pressure — a break day that won't break a streak.</p>
     <div class="toggle-row">
@@ -1308,6 +1352,15 @@ function renderParentMode(){
 function wireEvents(){
   document.querySelectorAll('[data-goto]').forEach(el=>{
     el.onclick = ()=>{ state.screen = el.dataset.goto; state.pinBuffer=''; state.pinError=''; render(); };
+  });
+  document.querySelectorAll('[data-enter-kid]').forEach(el=>{
+    el.onclick = ()=>{
+      state.kidId = el.dataset.enterKid;
+      state.screen = 'kidlock';
+      state.pinBuffer = '';
+      state.pinError = '';
+      render();
+    };
   });
   document.querySelectorAll('[data-goto-kid]').forEach(el=>{
     el.onclick = ()=>{ state.kidId = el.dataset.gotoKid; state.screen='kid'; state.avatarPickerOpen=false; render(); };
@@ -1446,9 +1499,13 @@ function wireEvents(){
   });
   document.querySelectorAll('[data-savekids]').forEach(el=>{
     el.onclick = async ()=>{
+      const pinInputs = document.querySelectorAll('[data-kidfield="pin"]');
+      for(const inp of pinInputs){
+        if(!/^\d{4}$/.test(inp.value.trim())){ toast('Each passcode must be 4 digits'); return; }
+      }
       document.querySelectorAll('[data-kidfield]').forEach(inp=>{
         const kid = CONFIG.kids.find(k=>k.id===inp.dataset.kid);
-        if(kid) kid[inp.dataset.kidfield] = inp.value;
+        if(kid) kid[inp.dataset.kidfield] = inp.value.trim();
       });
       await storeSet('family-config', CONFIG);
       toast('Saved ✓');
@@ -1613,6 +1670,8 @@ function wireEvents(){
         CONFIG.holidayMode = !CONFIG.holidayMode;
       } else if(which==='restDay'){
         CONFIG.restDayDate = (CONFIG.restDayDate===todayStr()) ? null : todayStr();
+      } else if(which==='hideStars'){
+        CONFIG.hideStarsFromKids = !CONFIG.hideStarsFromKids;
       }
       await storeSet('family-config', CONFIG);
       render();
@@ -1683,11 +1742,21 @@ function handlePinKey(k){
   render();
   if(state.pinBuffer.length===4){
     setTimeout(()=>{
-      if(state.pinBuffer === CONFIG.pin){
-        state.screen='parent'; state.pinBuffer=''; state.pinError='';
+      if(state.screen==='kidlock'){
+        const kid = CONFIG.kids.find(kk=>kk.id===state.kidId);
+        if(kid && state.pinBuffer === kid.pin){
+          state.screen='kid'; state.pinBuffer=''; state.pinError='';
+        } else {
+          state.pinError = 'Wrong code, try again';
+          state.pinBuffer='';
+        }
       } else {
-        state.pinError = 'Wrong PIN, try again';
-        state.pinBuffer='';
+        if(state.pinBuffer === CONFIG.pin){
+          state.screen='parent'; state.pinBuffer=''; state.pinError='';
+        } else {
+          state.pinError = 'Wrong PIN, try again';
+          state.pinBuffer='';
+        }
       }
       render();
     }, 150);
