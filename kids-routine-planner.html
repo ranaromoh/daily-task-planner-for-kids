@@ -793,7 +793,7 @@ function renderTrail(kid){
   const tokenX = pad + usable*pct;
   return `
   <div class="trail-card">
-    <h3>${starsVisibleToKids() ? `Star trail — ${total} / ${maxT}${total>=maxT?' 🎉 Goal reached!':''}` : 'Star trail'}</h3>
+    <h3>Star trail — ${total} / ${maxT}${total>=maxT?' 🎉 Goal reached!':''}</h3>
     <svg id="trailSvg" viewBox="0 0 ${w} ${h}">
       <path d="M ${pad} ${h/2} L ${w-pad} ${h/2}" stroke="#E3DFD3" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="1 10"/>
       <line x1="${pad}" y1="${h/2}" x2="${tokenX}" y2="${h/2}" stroke="var(--star)" stroke-width="4" stroke-linecap="round"/>
@@ -878,7 +878,7 @@ function renderPrizesPanel(kid){
     const isPending = pending.some(c=>c.threshold===p.threshold);
     let status, action;
     if(!reached){
-      status = starsVisibleToKids() ? `Need ${p.threshold-stars} more ⭐` : '🔒 Keep going!';
+      status = `Need ${p.threshold-stars} more ⭐`;
       action = '';
     } else if(isPending){
       status = 'Waiting for approval ⏳';
@@ -944,7 +944,7 @@ function renderKid(kidId){
       </div>
       <div class="row" style="gap:8px">
         ${streak>0?`<div class="streak-badge">🔥${streak}</div>`:''}
-        ${starsVisibleToKids() ? `<div class="star-total"><span class="icon">⭐</span>${STARS[kid.id]||0}</div>` : ''}
+        <div class="star-total"><span class="icon">⭐</span>${STARS[kid.id]||0}</div>
       </div>
     </div>
     ${avatarPicker}
@@ -974,7 +974,7 @@ function renderKidHistory(kidId){
     ${streak>0?`<div class="trail-card" style="text-align:center"><span class="streak-badge">🔥 ${streak}-day perfect streak!</span></div>`:''}
     <div class="trail-card">
       <h3>Stars earned each day</h3>
-      ${renderWeekBars(kid.id, !starsVisibleToKids())}
+      ${renderWeekBars(kid.id, false)}
     </div>
   </div>`;
 }
@@ -1329,10 +1329,10 @@ function renderParentMode(){
     </div>
   </div>
   <div class="panel-section">
-    <h3>Star totals</h3>
-    <p class="hint">Hide each kid's total star count from their own screen — keeps the trail and prizes visible without a number to compare against a sibling.</p>
+    <h3>Star totals on home screen</h3>
+    <p class="hint">Hides the star count on the kid-selection screen, where both kids' cards sit side by side — so they can't compare at a glance. Each kid still sees their own total once inside their own portal.</p>
     <div class="toggle-row">
-      <span>${CONFIG.hideStarsFromKids?'Hidden from kids 🙈':'Visible to kids ⭐'}</span>
+      <span>${CONFIG.hideStarsFromKids?'Hidden on home screen 🙈':'Visible on home screen ⭐'}</span>
       <div class="switch ${CONFIG.hideStarsFromKids?'on':''}" data-toggle="hideStars"></div>
     </div>
   </div>
