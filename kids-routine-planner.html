@@ -23,6 +23,9 @@
     --text-dim:#A8AFCB;
     --success:#7BD389;
     --radius:20px;
+    --shadow-sm: 0 4px 14px rgba(0,0,0,.22);
+    --shadow-md: 0 10px 28px rgba(0,0,0,.30);
+    --shadow-glow: 0 0 0 1px rgba(255,255,255,.04), 0 10px 28px rgba(0,0,0,.30);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -46,13 +49,14 @@
   .btn{
     background:var(--surface-2);color:var(--text);
     padding:12px 20px;border-radius:14px;font-weight:700;font-size:15px;
-    transition:transform .12s ease, background .15s ease;
+    transition:transform .12s ease, background .15s ease, box-shadow .15s ease;
+    box-shadow:var(--shadow-sm);
   }
-  .btn:hover{background:var(--surface-3);}
+  .btn:hover{background:var(--surface-3);transform:translateY(-1px);}
   .btn:active{transform:scale(.96);}
-  .btn-primary{background:var(--star);color:#3A2A0A;}
-  .btn-primary:hover{background:#FFD37A;}
-  .btn-ghost{background:transparent;color:var(--text-dim);}
+  .btn-primary{background:linear-gradient(160deg, #FFD37A, var(--star));color:#3A2A0A;box-shadow:0 6px 18px rgba(255,200,87,.35);}
+  .btn-primary:hover{background:linear-gradient(160deg, #FFDE99, #FFD37A);}
+  .btn-ghost{background:transparent;color:var(--text-dim);box-shadow:none;}
   .btn-ghost:hover{background:var(--surface);color:var(--text);}
   .btn-danger{background:#4A2A38;color:#FF9FB4;}
   .row{display:flex;gap:10px;align-items:center;}
@@ -73,28 +77,36 @@
   .hidden{display:none !important;}
 
   /* HOME */
-  .home-header{text-align:center;margin:18px 0 30px;}
-  .home-header .eyebrow{color:var(--star);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px;}
-  .home-header h1{font-size:34px;margin:6px 0 4px;}
+  .home-header{text-align:center;margin:26px 0 34px;}
+  .home-header .eyebrow{
+    color:var(--star);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:12px;
+    text-shadow:0 0 18px rgba(255,200,87,.4);
+  }
+  .home-header h1{font-size:36px;margin:8px 0 6px;letter-spacing:-.01em;}
   .home-header p{color:var(--text-dim);margin:0;font-size:15px;}
-  .kid-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .kid-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px;}
   @media (max-width:480px){.kid-cards{grid-template-columns:1fr;}}
   .kid-card{
-    border-radius:24px;padding:22px 18px;text-align:center;position:relative;overflow:hidden;
-    border:2px solid transparent;transition:transform .15s ease, border-color .15s ease;
+    border-radius:26px;padding:26px 20px;text-align:center;position:relative;overflow:hidden;
+    border:2px solid transparent;transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    box-shadow:var(--shadow-md);
   }
-  .kid-card:hover{transform:translateY(-3px);}
+  .kid-card::after{
+    content:'';position:absolute;top:-40%;right:-30%;width:70%;height:70%;
+    background:radial-gradient(circle, rgba(255,255,255,.10), transparent 70%);pointer-events:none;
+  }
+  .kid-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-glow);}
   .kid-card:active{transform:scale(.98);}
-  .kid-card .avatar{font-size:52px;display:block;margin-bottom:8px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3));}
-  .kid-card .kname{font-family:'Baloo 2';font-size:22px;font-weight:700;margin:2px 0 8px;}
+  .kid-card .avatar{font-size:52px;display:block;margin-bottom:10px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));}
+  .kid-card .kname{font-family:'Baloo 2';font-size:23px;font-weight:700;margin:2px 0 8px;}
   .kid-card .kstars{font-weight:800;font-size:15px;}
-  .kid1-card{background:linear-gradient(160deg, var(--kid1-dim), var(--surface));}
+  .kid1-card{background:linear-gradient(155deg, var(--kid1-dim) 0%, var(--surface) 65%);}
   .kid1-card:hover{border-color:var(--kid1);}
-  .kid2-card{background:linear-gradient(160deg, var(--kid2-dim), var(--surface));}
+  .kid2-card{background:linear-gradient(155deg, var(--kid2-dim) 0%, var(--surface) 65%);}
   .kid2-card:hover{border-color:var(--kid2);}
   .parent-link{
     display:flex;align-items:center;justify-content:center;gap:8px;
-    margin:34px auto 0;color:var(--text-dim);font-size:13px;font-weight:700;
+    margin:38px auto 0;color:var(--text-dim);font-size:13px;font-weight:700;
     background:none;padding:10px;
   }
   .parent-link:hover{color:var(--text);}
@@ -108,29 +120,30 @@
   .kid-id h2{margin:0;font-size:22px;}
   .mode-pill{font-size:12px;padding:5px 12px;}
   .star-total{
-    display:flex;align-items:center;gap:8px;background:var(--surface);
+    display:flex;align-items:center;gap:8px;background:linear-gradient(160deg, var(--surface), var(--surface-2));
     padding:8px 16px;border-radius:999px;font-family:'Baloo 2';font-weight:700;font-size:18px;
-    box-shadow:0 0 0 2px var(--surface-3) inset;
+    box-shadow:0 0 0 2px var(--surface-3) inset, 0 4px 12px rgba(255,200,87,.15);
   }
   .star-total .icon{font-size:20px;}
 
   /* trail */
-  .trail-card{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:22px;}
+  .trail-card{background:linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 140%);border-radius:var(--radius);padding:20px;margin-bottom:22px;box-shadow:var(--shadow-sm);}
   .trail-card h3{margin:0 0 14px;font-size:15px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
   #trailSvg{width:100%;height:auto;display:block;}
   .milestone-label{font-family:'Nunito';font-weight:800;fill:var(--text-dim);}
   .milestone-label.reached{fill:var(--star);}
 
   /* routine cards */
-  .routine-card{background:var(--surface);border-radius:var(--radius);padding:18px 18px 8px;margin-bottom:16px;}
+  .routine-card{background:var(--surface);border-radius:var(--radius);padding:18px 18px 8px;margin-bottom:16px;box-shadow:var(--shadow-sm);transition:box-shadow .2s ease;}
   .routine-card .rhead{display:flex;align-items:center;justify-content:between;gap:10px;margin-bottom:10px;}
   .routine-card h3{margin:0;font-size:18px;flex:1;}
   .routine-card .rprogress{font-size:13px;color:var(--text-dim);font-weight:700;}
   .task-list{list-style:none;margin:0;padding:0;}
   .task{
-    display:flex;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.06);
-    cursor:pointer;user-select:none;
+    display:flex;align-items:center;gap:12px;padding:13px 6px;border-bottom:1px solid rgba(255,255,255,.06);
+    cursor:pointer;user-select:none;transition:background .12s ease;border-radius:10px;
   }
+  .task:hover{background:rgba(255,255,255,.03);}
   .task:last-child{border-bottom:none;}
   .task .icon{font-size:24px;width:32px;text-align:center;flex-shrink:0;}
   .task .label{flex:1;font-weight:700;font-size:15.5px;}
@@ -138,9 +151,9 @@
   .checkbox{
     width:28px;height:28px;border-radius:9px;border:2.5px solid var(--surface-3);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    transition:all .15s ease;font-size:15px;
+    transition:all .18s cubic-bezier(.34,1.56,.64,1);font-size:15px;
   }
-  .task.done .checkbox{background:var(--success);border-color:var(--success);color:#123018;}
+  .task.done .checkbox{background:var(--success);border-color:var(--success);color:#123018;transform:scale(1.08);box-shadow:0 0 0 4px rgba(123,211,137,.18);}
   .task:not(.done):hover .checkbox{border-color:var(--star);}
   .pop{position:relative;}
   .star-pop{
@@ -169,7 +182,7 @@
   .tabbar{display:flex;gap:6px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px;}
   .tab{white-space:nowrap;padding:9px 16px;border-radius:12px;background:var(--surface);color:var(--text-dim);font-weight:700;font-size:14px;}
   .tab.active{background:var(--star);color:#3A2A0A;}
-  .panel-section{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+  .panel-section{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow-sm);}
   .panel-section h3{margin:0 0 4px;font-size:16px;}
   .panel-section .hint{color:var(--text-dim);font-size:13px;margin:0 0 14px;}
   .field{margin-bottom:12px;}
@@ -307,6 +320,16 @@
   .trophy-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13.5px;}
   .trophy-row:last-child{border-bottom:none;}
   .trophy-date{color:var(--text-dim);font-size:11.5px;flex-shrink:0;}
+
+  /* avatar builder */
+  .builder-preview{display:flex;justify-content:center;padding:20px 0;background:var(--surface);border-radius:var(--radius);margin-bottom:18px;}
+  .builder-cat{margin-bottom:18px;}
+  .builder-cat-label{font-size:12px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+  .swatch-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .swatch-color{width:38px;height:38px;border-radius:50%;border:3px solid transparent;flex-shrink:0;}
+  .swatch-color.selected{border-color:var(--star);}
+  .swatch-option{padding:9px 14px;border-radius:12px;background:var(--surface-2);color:var(--text-dim);font-weight:700;font-size:13px;}
+  .swatch-option.selected{background:var(--star);color:#3A2A0A;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -391,6 +414,10 @@ function startLiveSync(){
       HISTORY[kid.id] = histRaw || {};
       const prizeRaw = data[('prizesLog:'+kid.id).replace(/:/g,'__')];
       PRIZES_LOG[kid.id] = prizeRaw || [];
+      const pendingRaw = data[('pendingClaims:'+kid.id).replace(/:/g,'__')];
+      PENDING_CLAIMS[kid.id] = pendingRaw || [];
+      const behaviorRaw = data[('behaviorLog:'+kid.id).replace(/:/g,'__')];
+      BEHAVIOR_LOG[kid.id] = behaviorRaw || [];
     }
     const notesRaw = data[('dayNotes').replace(/:/g,'__')];
     DAY_NOTES = notesRaw || {};
@@ -469,6 +496,12 @@ const DEFAULT_CONFIG = {
     {threshold:10, reward:'Pick dessert or extra 15 min screen time'},
     {threshold:25, reward:'A toy or a fun outing'},
     {threshold:50, reward:'The big prize they choose in advance'}
+  ],
+  behaviorReasons: [
+    {label:"Didn't listen / ignored instructions", amount:1},
+    {label:'Unkind to sibling', amount:3},
+    {label:'Screen time without permission', amount:2},
+    {label:'Talking back / disrespect', amount:2}
   ]
 };
 
@@ -479,9 +512,51 @@ let STREAK = {}; // {kidId: {lastDate, count}}
 let HISTORY = {}; // {kidId: {date: netStarsThatDay}}
 let DAY_NOTES = {}; // {date: text}
 let PRIZES_LOG = {}; // {kidId: [{date, reward, threshold}]}
+let PENDING_CLAIMS = {}; // {kidId: [{id, date, reward, threshold}]}
+let BEHAVIOR_LOG = {}; // {kidId: [{date, reason, amount}]}
 let state = { screen:'home', kidId:null, parentTab:'kids', pinBuffer:'', avatarPickerOpen:false };
 
 const AVATAR_CHOICES = ['🦊','🐻','🐼','🐰','🦁','🐯','🐨','🐸','🦄','🐶','🐱','🦋'];
+const SKIN_TONES = ['#F9DFC4','#F2C9A0','#D9A066','#A9673C','#6B4226'];
+const HAIR_COLORS = ['#2A1B0F','#4A2E1D','#7A4A25','#C98A3B','#E8C36B','#B23B3B'];
+const OUTFIT_COLORS = ['#FF6F91','#4ECDC4','#FFC857','#7BD389','#8A7FFF','#FF9F5B'];
+const HAIR_STYLES = [['bald','Bald'],['short','Short'],['long','Long'],['curly','Curly']];
+const ACCESSORIES = [['none','None'],['glasses','Glasses'],['bow','Bow'],['cap','Cap']];
+
+function buildAvatarSVG(cfg, size){
+  size = size||64;
+  const skin = cfg.skin || SKIN_TONES[1];
+  const hairColor = cfg.hairColor || HAIR_COLORS[1];
+  const outfit = cfg.outfit || OUTFIT_COLORS[1];
+  const hairStyle = cfg.hairStyle || 'short';
+  const accessory = cfg.accessory || 'none';
+
+  let hairShape = '';
+  if(hairStyle==='short') hairShape = `<path d="M20 38 Q50 10 80 38 L80 28 Q50 4 20 28 Z" fill="${hairColor}"/>`;
+  else if(hairStyle==='long') hairShape = `<path d="M18 42 Q50 8 82 42 L82 68 Q75 56 75 42 L25 42 Q25 56 18 68 Z" fill="${hairColor}"/>`;
+  else if(hairStyle==='curly') hairShape = `<g fill="${hairColor}"><circle cx="27" cy="30" r="10"/><circle cx="42" cy="19" r="11"/><circle cx="58" cy="19" r="11"/><circle cx="73" cy="30" r="10"/></g>`;
+
+  let accessoryShape = '';
+  if(accessory==='glasses') accessoryShape = `<g stroke="#2A2A2A" stroke-width="2.5" fill="rgba(255,255,255,.15)"><circle cx="38" cy="46" r="8"/><circle cx="62" cy="46" r="8"/><line x1="46" y1="46" x2="54" y2="46"/></g>`;
+  else if(accessory==='bow') accessoryShape = `<g fill="#FF6F91"><circle cx="32" cy="18" r="6"/><circle cx="20" cy="18" r="6"/><rect x="18" y="15" width="16" height="6" rx="2"/></g>`;
+  else if(accessory==='cap') accessoryShape = `<path d="M14 30 Q50 4 86 30 L86 20 Q50 -4 14 20 Z" fill="${cfg.capColor||outfit}"/><rect x="62" y="18" width="30" height="9" rx="4" fill="${cfg.capColor||outfit}"/>`;
+
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" style="display:block">
+    <circle cx="50" cy="46" r="30" fill="${skin}"/>
+    ${hairStyle!=='bald' ? hairShape : ''}
+    <circle cx="40" cy="49" r="3" fill="#2A2A2A"/>
+    <circle cx="60" cy="49" r="3" fill="#2A2A2A"/>
+    <path d="M42 59 Q50 64 58 59" stroke="#2A2A2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M25 100 Q50 76 75 100 Z" fill="${outfit}"/>
+    ${accessoryShape}
+  </svg>`;
+}
+function renderAvatar(kid, size){
+  if(kid.avatarType==='custom' && kid.avatarConfig){
+    return buildAvatarSVG(kid.avatarConfig, size);
+  }
+  return `<span style="font-size:${size||52}px;line-height:1">${kid.avatar}</span>`;
+}
 
 const ROUTINE_KEYS_SCHOOL = ['morning_school','afterschool_school','afternoon_school','bedtime_school'];
 const ROUTINE_KEYS_HOLIDAY = ['morning_holiday','afterschool_holiday','bedtime_holiday'];
@@ -560,6 +635,10 @@ function migrateConfig(cfg){
       changed = true;
     }
   }
+  if(!cfg.behaviorReasons){
+    cfg.behaviorReasons = JSON.parse(JSON.stringify(DEFAULT_CONFIG.behaviorReasons));
+    changed = true;
+  }
   if(!cfg.contentVersion || cfg.contentVersion < 2){
     cfg.routines.morning_school = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.morning_school));
     cfg.routines.morning_holiday = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.morning_holiday));
@@ -603,6 +682,8 @@ async function init(){
     STREAK[kid.id] = await storeGet('streak:'+kid.id, {lastDate:null, count:0});
     HISTORY[kid.id] = await storeGet('history:'+kid.id, {});
     PRIZES_LOG[kid.id] = await storeGet('prizesLog:'+kid.id, []);
+    PENDING_CLAIMS[kid.id] = await storeGet('pendingClaims:'+kid.id, []);
+    BEHAVIOR_LOG[kid.id] = await storeGet('behaviorLog:'+kid.id, []);
   }
   DAY_NOTES = await storeGet('dayNotes', {});
   buildStarfield();
@@ -637,6 +718,7 @@ function render(){
   if(state.screen==='home') app.innerHTML = renderHome();
   else if(state.screen==='kid') app.innerHTML = renderKid(state.kidId);
   else if(state.screen==='history') app.innerHTML = renderKidHistory(state.kidId);
+  else if(state.screen==='avatarbuilder') app.innerHTML = renderAvatarBuilder(state.kidId);
   else if(state.screen==='lock') app.innerHTML = renderLock();
   else if(state.screen==='parent') app.innerHTML = renderParent();
   wireEvents();
@@ -646,7 +728,7 @@ function render(){
 function renderHome(){
   const cards = CONFIG.kids.map(k => `
     <button class="kid-card ${k.accent}-card" data-goto-kid="${k.id}">
-      <span class="avatar">${k.avatar}</span>
+      <span class="avatar">${renderAvatar(k,52)}</span>
       <div class="kname">${esc(k.name)}</div>
       <div class="kstars" style="color:var(--star)">⭐ ${STARS[k.id]||0} stars</div>
     </button>
@@ -700,7 +782,7 @@ function renderTrail(kid){
       <path d="M ${pad} ${h/2} L ${w-pad} ${h/2}" stroke="#3A4372" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="1 10"/>
       <line x1="${pad}" y1="${h/2}" x2="${tokenX}" y2="${h/2}" stroke="var(--star)" stroke-width="4" stroke-linecap="round"/>
       ${milestones}
-      <text x="${tokenX}" y="${h/2-16}" font-size="22" text-anchor="middle">${kid.avatar}</text>
+      ${kid.avatarType==='custom' ? `<circle cx="${tokenX}" cy="${h/2-16}" r="12" fill="${(kid.avatarConfig&&kid.avatarConfig.outfit)||'#4ECDC4'}"/><text x="${tokenX}" y="${h/2-11}" font-size="14" fill="#fff" text-anchor="middle" font-weight="800">${esc(kid.name[0])}</text>` : `<text x="${tokenX}" y="${h/2-16}" font-size="22" text-anchor="middle">${kid.avatar}</text>`}
     </svg>
   </div>`;
 }
@@ -773,9 +855,21 @@ function renderLockedRoutineCard(kid, routineKey){
 function renderPrizesPanel(kid){
   const stars = STARS[kid.id]||0;
   const prizes = (CONFIG.prizes||[]).slice().sort((a,b)=>a.threshold-b.threshold);
+  const pending = PENDING_CLAIMS[kid.id]||[];
   const rows = prizes.map(p=>{
     const reached = stars >= p.threshold;
-    const status = reached ? 'Unlocked — your choice!' : `Need ${p.threshold-stars} more ⭐`;
+    const isPending = pending.some(c=>c.threshold===p.threshold);
+    let status, action;
+    if(!reached){
+      status = `Need ${p.threshold-stars} more ⭐`;
+      action = '';
+    } else if(isPending){
+      status = 'Waiting for approval ⏳';
+      action = '';
+    } else {
+      status = 'Unlocked — your choice!';
+      action = `<button class="claim-btn" data-requestprize="${kid.id}:${p.threshold}">🎁 Ask to claim</button>`;
+    }
     return `
     <div class="prize-list-row ${reached?'reached':''}">
       <div class="prize-thresh">⭐${p.threshold}</div>
@@ -783,7 +877,7 @@ function renderPrizesPanel(kid){
         <div class="prize-reward">${esc(p.reward)}</div>
         <div class="prize-status">${status}</div>
       </div>
-      ${reached?`<button class="claim-btn" data-claimprize="${kid.id}:${p.threshold}">🎁 Claim</button>`:''}
+      ${action}
     </div>`;
   }).join('');
   const log = (PRIZES_LOG[kid.id]||[]).slice().reverse().slice(0,5);
@@ -794,7 +888,7 @@ function renderPrizesPanel(kid){
     </div>`).join('');
   return `
   <div class="trail-card">
-    <h3>Prizes — reach a threshold, then decide: claim it now or save up for a bigger one!</h3>
+    <h3>Prizes — reach a threshold, then decide: ask to claim it now, or save up for a bigger one!</h3>
     ${rows}
     ${trophyRows ? `<div style="margin-top:12px"><div class="rprogress" style="margin-bottom:4px">Recently claimed</div>${trophyRows}</div>` : ''}
   </div>`;
@@ -812,13 +906,14 @@ function renderKid(kidId){
   const avatarPicker = state.avatarPickerOpen ? `
     <div class="avatar-picker">
       ${AVATAR_CHOICES.map(a=>`<button class="avatar-choice" data-pickavatar="${a}">${a}</button>`).join('')}
-    </div>` : '';
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin:-10px 0 18px" data-gotobuilder="${kid.id}">🎨 Build your own avatar</button>` : '';
   return `
   <div class="screen">
     <div class="kid-topbar">
       <button class="back-btn" data-goto="home">←</button>
       <div class="kid-id">
-        <button class="avatar-sm-btn" data-toggleavatar="1">${kid.avatar}</button>
+        <button class="avatar-sm-btn" data-toggleavatar="1">${renderAvatar(kid,30)}</button>
         <div>
           <h2>${esc(kid.name)}</h2>
           <span class="pill mode-pill">${effectiveHolidayMode()?'☀️ Holiday':'🎒 School day'}</span>
@@ -847,7 +942,7 @@ function renderKidHistory(kidId){
     <div class="kid-topbar">
       <button class="back-btn" data-goto-kid="${kid.id}">←</button>
       <div class="kid-id">
-        <span class="avatar-sm">${kid.avatar}</span>
+        <span class="avatar-sm">${renderAvatar(kid,30)}</span>
         <h2>${esc(kid.name)}'s week</h2>
       </div>
       <span style="width:40px"></span>
@@ -857,6 +952,53 @@ function renderKidHistory(kidId){
       <h3>Stars earned each day</h3>
       ${renderWeekBars(kid.id)}
     </div>
+  </div>`;
+}
+function renderAvatarBuilder(kidId){
+  const kid = CONFIG.kids.find(k=>k.id===kidId);
+  if(!kid) return renderHome();
+  if(!state.builderDraft){
+    state.builderDraft = (kid.avatarType==='custom' && kid.avatarConfig)
+      ? {...kid.avatarConfig}
+      : {skin:SKIN_TONES[1], hairColor:HAIR_COLORS[1], outfit:OUTFIT_COLORS[1], hairStyle:'short', accessory:'none'};
+  }
+  const draft = state.builderDraft;
+  const colorRow = (field, options)=>options.map(c=>
+    `<button class="swatch-color ${draft[field]===c?'selected':''}" style="background:${c}" data-buildswatch="${field}:${c}"></button>`
+  ).join('');
+  const optionRow = (field, options)=>options.map(([val,label])=>
+    `<button class="swatch-option ${draft[field]===val?'selected':''}" data-buildswatch="${field}:${val}">${label}</button>`
+  ).join('');
+  return `
+  <div class="screen">
+    <div class="kid-topbar">
+      <button class="back-btn" data-cancelbuilder="1">←</button>
+      <h2 style="margin:0">Build your avatar</h2>
+      <span style="width:40px"></span>
+    </div>
+    <div class="builder-preview">${buildAvatarSVG(draft, 120)}</div>
+    <div class="builder-cat">
+      <div class="builder-cat-label">Skin tone</div>
+      <div class="swatch-row">${colorRow('skin', SKIN_TONES)}</div>
+    </div>
+    <div class="builder-cat">
+      <div class="builder-cat-label">Hair style</div>
+      <div class="swatch-row">${optionRow('hairStyle', HAIR_STYLES)}</div>
+    </div>
+    <div class="builder-cat">
+      <div class="builder-cat-label">Hair color</div>
+      <div class="swatch-row">${colorRow('hairColor', HAIR_COLORS)}</div>
+    </div>
+    <div class="builder-cat">
+      <div class="builder-cat-label">Outfit color</div>
+      <div class="swatch-row">${colorRow('outfit', OUTFIT_COLORS)}</div>
+    </div>
+    <div class="builder-cat">
+      <div class="builder-cat-label">Accessory</div>
+      <div class="swatch-row">${optionRow('accessory', ACCESSORIES)}</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:10px" data-saveavatarbuilder="${kid.id}">Save avatar</button>
+    <button class="btn btn-ghost" style="width:100%" data-cancelbuilder="1">Cancel</button>
   </div>`;
 }
 
@@ -919,12 +1061,13 @@ const ROUTINE_ORDER = [
   ['bedtime_school','Bedtime · School'], ['bedtime_holiday','Bedtime · Holiday']
 ];
 function renderParent(){
-  const tabs = [['kids','Kids'],['routines','Routines'],['prizes','Prizes'],['history','History'],['mode','Mode & PIN']];
+  const tabs = [['kids','Kids'],['routines','Routines'],['prizes','Prizes'],['behavior','Behavior'],['history','History'],['mode','Mode & PIN']];
   const tabHtml = tabs.map(([k,l])=>`<button class="tab ${state.parentTab===k?'active':''}" data-ptab="${k}">${l}</button>`).join('');
   let body='';
   if(state.parentTab==='kids') body = renderParentKids();
   else if(state.parentTab==='routines') body = renderParentRoutines();
   else if(state.parentTab==='prizes') body = renderParentPrizes();
+  else if(state.parentTab==='behavior') body = renderParentBehavior();
   else if(state.parentTab==='history') body = renderParentHistory();
   else if(state.parentTab==='mode') body = renderParentMode();
   return `
@@ -1015,13 +1158,29 @@ function renderParentRoutines(){
   </div>`;
 }
 function renderParentPrizes(){
+  const pendingSections = CONFIG.kids.map(k=>{
+    const pending = PENDING_CLAIMS[k.id]||[];
+    if(!pending.length) return '';
+    const rows = pending.map(c=>`
+      <div class="prize-list-row">
+        <div class="prize-thresh">⭐${c.threshold}</div>
+        <div style="flex:1">
+          <div class="prize-reward">${esc(c.reward)}</div>
+          <div class="prize-status">Requested ${c.date}</div>
+        </div>
+        <div class="row" style="gap:6px">
+          <button class="claim-btn" data-approveclaim="${k.id}:${c.id}">✓ Approve</button>
+          <button class="remove-x" data-denyclaim="${k.id}:${c.id}">✕</button>
+        </div>
+      </div>`).join('');
+    return `<div class="panel-section"><h3>${k.avatar} ${esc(k.name)} wants to claim</h3>${rows}</div>`;
+  }).join('');
   const rows = CONFIG.prizes.map((p,i)=>`
     <div class="prize-row" data-prizerow="${i}">
       <input data-prizefield="threshold" data-idx="${i}" type="number" value="${p.threshold}">
       <input data-prizefield="reward" data-idx="${i}" value="${esc(p.reward)}">
       <button class="remove-x" data-removeprize="${i}">✕</button>
-    </div>
-  `).join('');
+    </div>`).join('');
   const claimedSections = CONFIG.kids.map(k=>{
     const log = (PRIZES_LOG[k.id]||[]).slice().reverse();
     if(!log.length) return '';
@@ -1032,15 +1191,57 @@ function renderParentPrizes(){
       </div>`).join('');
     return `<div class="panel-section"><h3>${k.avatar} ${esc(k.name)}'s claimed prizes</h3>${rows}</div>`;
   }).join('');
-  return `
+  return pendingSections + `
   <div class="panel-section">
     <h3>Prize milestones</h3>
-    <p class="hint">Set how many stars unlock each reward. Kids choose when to claim from their own screen.</p>
+    <p class="hint">Set how many stars unlock each reward. Kids ask to claim; you approve or deny it here.</p>
     ${rows}
     <button class="add-task-btn" data-addprize="1">+ Add prize tier</button>
     <div style="margin-top:14px"><button class="btn btn-primary" data-saveprizes="1">Save prizes</button></div>
   </div>
   ${claimedSections}`;
+}
+function renderParentBehavior(){
+  const presets = CONFIG.behaviorReasons||[];
+  const kidOptions = CONFIG.kids.map(k=>`<option value="${k.id}">${esc(k.name)}</option>`).join('');
+  const reasonOptions = presets.map((r,i)=>`<option value="${i}" data-amount="${r.amount}">${esc(r.label)} (-${r.amount}⭐)</option>`).join('')
+    + `<option value="custom">Custom reason...</option>`;
+  const presetRows = presets.map((r,i)=>`
+    <div class="prize-row" data-reasonrow="${i}">
+      <input data-reasonfield="amount" data-idx="${i}" type="number" value="${r.amount}" style="width:64px">
+      <input data-reasonfield="label" data-idx="${i}" value="${esc(r.label)}">
+      <button class="remove-x" data-removereason="${i}">✕</button>
+    </div>`).join('');
+  const logSections = CONFIG.kids.map(k=>{
+    const log = (BEHAVIOR_LOG[k.id]||[]).slice().reverse().slice(0,8);
+    if(!log.length) return '';
+    const rows = log.map(e=>`
+      <div class="trophy-row">
+        <span>⚠️</span><span style="flex:1">${esc(e.reason)} <span class="prize-status">(-${e.amount}⭐)</span></span>
+        <span class="trophy-date">${e.date}</span>
+      </div>`).join('');
+    return `<div class="panel-section"><h3>${k.avatar} ${esc(k.name)}'s recent deductions</h3>${rows}</div>`;
+  }).join('');
+  return `
+  <div class="panel-section">
+    <h3>Deduct stars</h3>
+    <p class="hint">For a rule broken or behavior you want to discourage. Kids don't see this list, only the result.</p>
+    <div class="field"><label>Kid</label><select id="deductKid">${kidOptions}</select></div>
+    <div class="field"><label>Reason</label>
+      <select id="deductReason" onchange="document.getElementById('deductAmount').value=this.options[this.selectedIndex].dataset.amount||1; document.getElementById('deductCustomWrap').style.display=this.value==='custom'?'block':'none';">${reasonOptions}</select>
+    </div>
+    <div class="field" id="deductCustomWrap" style="display:none"><label>Custom reason</label><input id="deductCustomReason" placeholder="What happened?"></div>
+    <div class="field"><label>Stars to deduct</label><input id="deductAmount" type="number" min="1" value="${presets[0]?presets[0].amount:1}"></div>
+    <button class="btn btn-danger" data-dodeduct="1">➖ Deduct stars</button>
+  </div>
+  <div class="panel-section">
+    <h3>Manage reasons</h3>
+    <p class="hint">These fill the dropdown above. Amount is the default deduction for that reason.</p>
+    ${presetRows}
+    <button class="add-task-btn" data-addreason="1">+ Add reason</button>
+    <div style="margin-top:14px"><button class="btn btn-primary" data-savereasons="1">Save reasons</button></div>
+  </div>
+  ${logSections}`;
 }
 function renderParentMode(){
   const isRestDay = CONFIG.restDayDate === todayStr();
@@ -1088,13 +1289,46 @@ function wireEvents(){
   document.querySelectorAll('[data-toggleavatar]').forEach(el=>{
     el.onclick = ()=>{ state.avatarPickerOpen = !state.avatarPickerOpen; render(); };
   });
+  document.querySelectorAll('[data-gotobuilder]').forEach(el=>{
+    el.onclick = ()=>{
+      state.kidId = el.dataset.gotobuilder;
+      state.avatarPickerOpen = false;
+      state.builderDraft = null;
+      state.screen = 'avatarbuilder';
+      render();
+    };
+  });
+  document.querySelectorAll('[data-buildswatch]').forEach(el=>{
+    el.onclick = ()=>{
+      const [field, val] = el.dataset.buildswatch.split(':');
+      if(!state.builderDraft) return;
+      state.builderDraft[field] = val;
+      render();
+    };
+  });
+  document.querySelectorAll('[data-saveavatarbuilder]').forEach(el=>{
+    el.onclick = async ()=>{
+      const kid = CONFIG.kids.find(k=>k.id===el.dataset.saveavatarbuilder);
+      if(kid && state.builderDraft){
+        kid.avatarType = 'custom';
+        kid.avatarConfig = {...state.builderDraft};
+        await storeSet('family-config', CONFIG);
+      }
+      state.builderDraft = null;
+      state.screen = 'kid';
+      render();
+    };
+  });
+  document.querySelectorAll('[data-cancelbuilder]').forEach(el=>{
+    el.onclick = ()=>{ state.builderDraft = null; state.screen = 'kid'; render(); };
+  });
   document.querySelectorAll('[data-pinkey]').forEach(el=>{
     el.onclick = ()=>handlePinKey(el.dataset.pinkey);
   });
   document.querySelectorAll('[data-pickavatar]').forEach(el=>{
     el.onclick = async ()=>{
       const kid = CONFIG.kids.find(k=>k.id===state.kidId);
-      if(kid){ kid.avatar = el.dataset.pickavatar; await storeSet('family-config', CONFIG); }
+      if(kid){ kid.avatar = el.dataset.pickavatar; kid.avatarType = 'emoji'; await storeSet('family-config', CONFIG); }
       state.avatarPickerOpen = false;
       render();
     };
@@ -1197,22 +1431,88 @@ function wireEvents(){
       render();
     };
   });
-  document.querySelectorAll('[data-claimprize]').forEach(el=>{
+  document.querySelectorAll('[data-dodeduct]').forEach(el=>{
     el.onclick = async ()=>{
-      const [kidId, thresholdStr] = el.dataset.claimprize.split(':');
-      const threshold = parseInt(thresholdStr);
-      const kid = CONFIG.kids.find(k=>k.id===kidId);
-      const prize = (CONFIG.prizes||[]).find(p=>p.threshold===threshold);
-      if(!kid || !prize) return;
-      if(!confirm(`Claim "${prize.reward}" for ${threshold} stars?`)) return;
-      STARS[kidId] = Math.max(0, (STARS[kidId]||0) - threshold);
-      if(!PRIZES_LOG[kidId]) PRIZES_LOG[kidId] = [];
-      PRIZES_LOG[kidId].push({date: todayStr(), reward: prize.reward, threshold});
+      const kidId = document.getElementById('deductKid').value;
+      const reasonSel = document.getElementById('deductReason');
+      const amount = parseInt(document.getElementById('deductAmount').value)||0;
+      if(amount<=0){ toast('Enter an amount'); return; }
+      let reasonText;
+      if(reasonSel.value==='custom'){
+        reasonText = document.getElementById('deductCustomReason').value.trim() || 'Custom';
+      } else {
+        const preset = CONFIG.behaviorReasons[parseInt(reasonSel.value)];
+        reasonText = preset ? preset.label : 'Behavior';
+      }
+      const kidName = (CONFIG.kids.find(k=>k.id===kidId)||{}).name || 'this kid';
+      if(!confirm(`Deduct ${amount} stars from ${kidName} for: ${reasonText}?`)) return;
+      STARS[kidId] = Math.max(0, (STARS[kidId]||0) - amount);
+      if(!BEHAVIOR_LOG[kidId]) BEHAVIOR_LOG[kidId] = [];
+      BEHAVIOR_LOG[kidId].push({date: todayStr(), reason: reasonText, amount});
       await storeSetMulti({
         ['stars:'+kidId]: STARS[kidId],
-        ['prizesLog:'+kidId]: PRIZES_LOG[kidId]
+        ['behaviorLog:'+kidId]: BEHAVIOR_LOG[kidId]
       });
-      celebrate(`🏆 Claimed: ${prize.reward}!`);
+      toast('Stars deducted');
+      render();
+    };
+  });
+  document.querySelectorAll('[data-addreason]').forEach(el=>{
+    el.onclick = ()=>{ CONFIG.behaviorReasons.push({label:'New reason', amount:1}); render(); };
+  });
+  document.querySelectorAll('[data-removereason]').forEach(el=>{
+    el.onclick = ()=>{ CONFIG.behaviorReasons.splice(parseInt(el.dataset.removereason),1); render(); };
+  });
+  document.querySelectorAll('[data-savereasons]').forEach(el=>{
+    el.onclick = async ()=>{
+      document.querySelectorAll('[data-reasonfield="amount"]').forEach(inp=>{
+        CONFIG.behaviorReasons[inp.dataset.idx].amount = parseInt(inp.value)||1;
+      });
+      document.querySelectorAll('[data-reasonfield="label"]').forEach(inp=>{
+        CONFIG.behaviorReasons[inp.dataset.idx].label = inp.value;
+      });
+      await storeSet('family-config', CONFIG);
+      toast('Reasons saved ✓');
+    };
+  });
+  document.querySelectorAll('[data-approveclaim]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [kidId, claimId] = el.dataset.approveclaim.split(':');
+      const claim = (PENDING_CLAIMS[kidId]||[]).find(c=>c.id===claimId);
+      if(!claim) return;
+      STARS[kidId] = Math.max(0, (STARS[kidId]||0) - claim.threshold);
+      if(!PRIZES_LOG[kidId]) PRIZES_LOG[kidId] = [];
+      PRIZES_LOG[kidId].push({date: claim.date, reward: claim.reward, threshold: claim.threshold});
+      PENDING_CLAIMS[kidId] = (PENDING_CLAIMS[kidId]||[]).filter(c=>c.id!==claimId);
+      await storeSetMulti({
+        ['stars:'+kidId]: STARS[kidId],
+        ['prizesLog:'+kidId]: PRIZES_LOG[kidId],
+        ['pendingClaims:'+kidId]: PENDING_CLAIMS[kidId]
+      });
+      toast('Approved ✓');
+      render();
+    };
+  });
+  document.querySelectorAll('[data-denyclaim]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [kidId, claimId] = el.dataset.denyclaim.split(':');
+      PENDING_CLAIMS[kidId] = (PENDING_CLAIMS[kidId]||[]).filter(c=>c.id!==claimId);
+      await storeSet('pendingClaims:'+kidId, PENDING_CLAIMS[kidId]);
+      toast('Denied');
+      render();
+    };
+  });
+  document.querySelectorAll('[data-requestprize]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [kidId, thresholdStr] = el.dataset.requestprize.split(':');
+      const threshold = parseInt(thresholdStr);
+      const prize = (CONFIG.prizes||[]).find(p=>p.threshold===threshold);
+      if(!prize) return;
+      if(!PENDING_CLAIMS[kidId]) PENDING_CLAIMS[kidId] = [];
+      if(PENDING_CLAIMS[kidId].some(c=>c.threshold===threshold)) return;
+      PENDING_CLAIMS[kidId].push({id:'c'+Date.now(), date: todayStr(), reward: prize.reward, threshold});
+      await storeSet('pendingClaims:'+kidId, PENDING_CLAIMS[kidId]);
+      toast('Sent to parent for approval ✓');
       render();
     };
   });
