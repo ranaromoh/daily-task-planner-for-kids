@@ -263,6 +263,18 @@ async function storeSet(key, value){
   catch(e){ console.error('storage set failed', e); }
 }
 
+async function storeSetMulti(pairs){
+  if(fbDB){
+    try{
+      const updates = {};
+      for(const k in pairs) updates[keyToPath(k)] = pairs[k];
+      await fbDB.ref().update(updates);
+      return;
+    }catch(e){ console.error('firebase multi-set failed', e); }
+  }
+  for(const k in pairs) await storeSet(k, pairs[k]);
+}
+
 function startLiveSync(){
   if(!fbDB) return;
   fbDB.ref('starTrail').on('value', (snap)=>{
@@ -461,9 +473,9 @@ function renderTrail(kid){
 function renderRoutineCard(kid, routineKey){
   const routine = CONFIG.routines[routineKey];
   const prog = PROGRESS[kid.id] || {};
-  const doneCount = routine.tasks.filter(t=>prog[t.id]).length;
+  const doneCount = routine.tasks.filter(t=>prog[routineKey+'::'+t.id]).length;
   const items = routine.tasks.map(t=>{
-    const done = !!prog[t.id];
+    const done = !!prog[routineKey+'::'+t.id];
     return `<li class="task ${done?'done':''} pop" data-task="${t.id}" data-routine="${routineKey}" data-kid="${kid.id}">
       <span class="icon">${t.icon}</span>
       <span class="label">${esc(t.label)}</span>
@@ -821,11 +833,14 @@ function handlePinKey(k){
 
 async function toggleTask(kidId, routineKey, taskId, el){
   if(!PROGRESS[kidId]) PROGRESS[kidId] = {};
-  const wasDone = !!PROGRESS[kidId][taskId];
-  PROGRESS[kidId][taskId] = !wasDone;
+  const progKey = routineKey + '::' + taskId;
+  const wasDone = !!PROGRESS[kidId][progKey];
+  PROGRESS[kidId][progKey] = !wasDone;
   STARS[kidId] = Math.max(0, (STARS[kidId]||0) + (wasDone ? -1 : 1));
-  await storeSet(progressKey(kidId), PROGRESS[kidId]);
-  await storeSet('stars:'+kidId, STARS[kidId]);
+  await storeSetMulti({
+    [progressKey(kidId)]: PROGRESS[kidId],
+    ['stars:'+kidId]: STARS[kidId]
+  });
   if(!wasDone){
     const popEl = document.createElement('span');
     popEl.className='star-pop';
