@@ -287,6 +287,26 @@
   .routine-card.locked-card{opacity:.55;padding-bottom:16px;}
   .routine-card.locked-card .rprogress{color:var(--text-dim);font-weight:700;font-size:12.5px;}
   .locked-msg{padding:6px 2px 2px;color:var(--text-dim);font-weight:700;font-size:14px;}
+
+  /* prizes */
+  .prize-list-row{
+    display:flex;align-items:center;gap:12px;background:var(--surface-2);border-radius:14px;
+    padding:12px 14px;margin-bottom:8px;
+  }
+  .prize-list-row.reached{background:linear-gradient(135deg, var(--kid1-dim), var(--surface-2));}
+  .prize-thresh{
+    width:44px;height:44px;border-radius:12px;background:var(--surface-3);color:var(--text-dim);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;
+    font-weight:800;font-size:13px;line-height:1.1;
+  }
+  .prize-list-row.reached .prize-thresh{background:var(--star);color:#3A2A0A;}
+  .prize-reward{flex:1;font-weight:700;font-size:14px;}
+  .prize-status{font-size:12px;color:var(--text-dim);font-weight:700;}
+  .claim-btn{background:var(--star);color:#3A2A0A;padding:9px 16px;border-radius:12px;font-weight:800;font-size:13px;flex-shrink:0;}
+  .claim-btn:hover{background:#FFD37A;}
+  .trophy-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13.5px;}
+  .trophy-row:last-child{border-bottom:none;}
+  .trophy-date{color:var(--text-dim);font-size:11.5px;flex-shrink:0;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -365,7 +385,15 @@ function startLiveSync(){
       STARS[kid.id] = (starsRaw===undefined||starsRaw===null) ? (STARS[kid.id]||0) : starsRaw;
       const progRaw = data[(progressKey(kid.id)).replace(/:/g,'__')];
       PROGRESS[kid.id] = progRaw || {};
+      const streakRaw = data[('streak:'+kid.id).replace(/:/g,'__')];
+      STREAK[kid.id] = streakRaw || {lastDate:null, count:0};
+      const histRaw = data[('history:'+kid.id).replace(/:/g,'__')];
+      HISTORY[kid.id] = histRaw || {};
+      const prizeRaw = data[('prizesLog:'+kid.id).replace(/:/g,'__')];
+      PRIZES_LOG[kid.id] = prizeRaw || [];
     }
+    const notesRaw = data[('dayNotes').replace(/:/g,'__')];
+    DAY_NOTES = notesRaw || {};
     render();
   });
 }
@@ -385,6 +413,7 @@ const DEFAULT_CONFIG = {
   routines: {
     morning_school:  {label:'Morning Routine', startTime:'06:00', endTime:'08:00', tasks:[
       {id:'t1', icon:'⏰', label:'Wake up'},
+      {id:'t7', icon:'🚽', label:'Go to the bathroom'},
       {id:'t2', icon:'🪥', label:'Brush teeth'},
       {id:'t3', icon:'👕', label:'Get dressed'},
       {id:'t4', icon:'🥣', label:'Eat breakfast'},
@@ -393,6 +422,7 @@ const DEFAULT_CONFIG = {
     ]},
     morning_holiday: {label:'Morning Routine', startTime:'10:00', endTime:'12:00', tasks:[
       {id:'t1', icon:'⏰', label:'Wake up'},
+      {id:'t5', icon:'🚽', label:'Go to the bathroom'},
       {id:'t2', icon:'🪥', label:'Brush teeth'},
       {id:'t3', icon:'👕', label:'Get dressed'},
       {id:'t4', icon:'🥣', label:'Eat breakfast'}
@@ -400,20 +430,26 @@ const DEFAULT_CONFIG = {
     afterschool_school: {label:'After School', startTime:'11:00', endTime:'14:00', tasks:[
       {id:'t1', icon:'🧼', label:'Wash hands'},
       {id:'t2', icon:'🍎', label:'Have a snack'},
-      {id:'t3', icon:'📚', label:'Homework / reading'},
-      {id:'t4', icon:'🎒', label:'Tidy school bag'},
-      {id:'t5', icon:'🧸', label:'Free play'}
+      {id:'t3', icon:'🧺', label:'Put dirty clothes in laundry basket'},
+      {id:'t4', icon:'😌', label:'Quiet rest time (no screens)'}
     ]},
     afternoon_school: {label:'Afternoon', startTime:'14:30', endTime:'20:30', tasks:[
-      {id:'t1', icon:'📖', label:'Reading time'},
-      {id:'t2', icon:'🎨', label:'Hobby / activity time'},
-      {id:'t3', icon:'🍽️', label:'Help set the table'},
-      {id:'t4', icon:'🧹', label:'Tidy room'}
+      {id:'t1', icon:'📚', label:'Homework or reading'},
+      {id:'t2', icon:'🏃', label:'Play in the backyard'},
+      {id:'t3', icon:'🧩', label:'Sibling activity together'},
+      {id:'t4', icon:'🍽️', label:'Help with dinner'},
+      {id:'t5', icon:'🧵', label:'Bracelets or crochet', visibleTo:'k1'},
+      {id:'t6', icon:'🎨', label:'Drawing or building', visibleTo:'k2'},
+      {id:'t7', icon:'🧺', label:'Fold laundry', visibleTo:'k1'},
+      {id:'t8', icon:'🪴', label:'Water a plant', visibleTo:'k2'},
+      {id:'t9', icon:'🧹', label:'Tidy room'}
     ]},
     afterschool_holiday: {label:'Afternoon', startTime:'13:00', endTime:'18:00', tasks:[
-      {id:'t1', icon:'🧸', label:'Free play'},
-      {id:'t2', icon:'🧩', label:'Reading or puzzle time'},
-      {id:'t3', icon:'🧹', label:'Tidy up toys'}
+      {id:'t1', icon:'🏃', label:'Play in the backyard'},
+      {id:'t2', icon:'🧩', label:'Sibling activity together'},
+      {id:'t3', icon:'🧵', label:'Bracelets or crochet', visibleTo:'k1'},
+      {id:'t4', icon:'🎨', label:'Drawing or building', visibleTo:'k2'},
+      {id:'t5', icon:'🧹', label:'Tidy up toys'}
     ]},
     bedtime_school: {label:'Bedtime Routine', startTime:'20:45', endTime:'21:15', tasks:[
       {id:'t1', icon:'🎒', label:'Pack bag for tomorrow'},
@@ -442,6 +478,7 @@ let PROGRESS = {}; // cache of today's progress per kid: {kidId: {"routine::task
 let STREAK = {}; // {kidId: {lastDate, count}}
 let HISTORY = {}; // {kidId: {date: netStarsThatDay}}
 let DAY_NOTES = {}; // {date: text}
+let PRIZES_LOG = {}; // {kidId: [{date, reward, threshold}]}
 let state = { screen:'home', kidId:null, parentTab:'kids', pinBuffer:'', avatarPickerOpen:false };
 
 const AVATAR_CHOICES = ['🦊','🐻','🐼','🐰','🦁','🐯','🐨','🐸','🦄','🐶','🐱','🦋'];
@@ -486,6 +523,15 @@ function isRoutineActiveNow(routine){
   const now = currentMinutes();
   return now >= timeToMinutes(routine.startTime) && now <= timeToMinutes(routine.endTime);
 }
+function displayRoutineKeysForToday(){
+  let keys = currentRoutineKeys().slice();
+  const day = new Date().getDay(); // 6 = Saturday
+  if(day===6){
+    // Saturday night matches school-day bedtime (same window, already includes a bath) since Sunday is a school day
+    keys = keys.map(k => k==='bedtime_holiday' ? 'bedtime_school' : k);
+  }
+  return keys;
+}
 function migrateConfig(cfg){
   let changed = false;
   if(!cfg.routineOrder){
@@ -513,6 +559,15 @@ function migrateConfig(cfg){
       cfg.routines[key].endTime = SCHEDULE_DEFAULTS[key].end;
       changed = true;
     }
+  }
+  if(!cfg.contentVersion || cfg.contentVersion < 2){
+    cfg.routines.morning_school = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.morning_school));
+    cfg.routines.morning_holiday = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.morning_holiday));
+    cfg.routines.afterschool_school = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.afterschool_school));
+    cfg.routines.afternoon_school = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.afternoon_school));
+    cfg.routines.afterschool_holiday = JSON.parse(JSON.stringify(DEFAULT_CONFIG.routines.afterschool_holiday));
+    cfg.contentVersion = 2;
+    changed = true;
   }
   return changed;
 }
@@ -547,6 +602,7 @@ async function init(){
     PROGRESS[kid.id] = await storeGet(progressKey(kid.id), {});
     STREAK[kid.id] = await storeGet('streak:'+kid.id, {lastDate:null, count:0});
     HISTORY[kid.id] = await storeGet('history:'+kid.id, {});
+    PRIZES_LOG[kid.id] = await storeGet('prizesLog:'+kid.id, []);
   }
   DAY_NOTES = await storeGet('dayNotes', {});
   buildStarfield();
@@ -714,10 +770,39 @@ function renderLockedRoutineCard(kid, routineKey){
     <div class="locked-msg">${msg}</div>
   </div>`;
 }
+function renderPrizesPanel(kid){
+  const stars = STARS[kid.id]||0;
+  const prizes = (CONFIG.prizes||[]).slice().sort((a,b)=>a.threshold-b.threshold);
+  const rows = prizes.map(p=>{
+    const reached = stars >= p.threshold;
+    const status = reached ? 'Unlocked — your choice!' : `Need ${p.threshold-stars} more ⭐`;
+    return `
+    <div class="prize-list-row ${reached?'reached':''}">
+      <div class="prize-thresh">⭐${p.threshold}</div>
+      <div>
+        <div class="prize-reward">${esc(p.reward)}</div>
+        <div class="prize-status">${status}</div>
+      </div>
+      ${reached?`<button class="claim-btn" data-claimprize="${kid.id}:${p.threshold}">🎁 Claim</button>`:''}
+    </div>`;
+  }).join('');
+  const log = (PRIZES_LOG[kid.id]||[]).slice().reverse().slice(0,5);
+  const trophyRows = log.map(entry=>`
+    <div class="trophy-row">
+      <span>🏆</span><span style="flex:1">${esc(entry.reward)}</span>
+      <span class="trophy-date">${entry.date}</span>
+    </div>`).join('');
+  return `
+  <div class="trail-card">
+    <h3>Prizes — reach a threshold, then decide: claim it now or save up for a bigger one!</h3>
+    ${rows}
+    ${trophyRows ? `<div style="margin-top:12px"><div class="rprogress" style="margin-bottom:4px">Recently claimed</div>${trophyRows}</div>` : ''}
+  </div>`;
+}
 function renderKid(kidId){
   const kid = CONFIG.kids.find(k=>k.id===kidId);
   if(!kid) return renderHome();
-  const keys = currentRoutineKeys();
+  const keys = displayRoutineKeysForToday();
   const cards = keys.map(k=>{
     const routine = CONFIG.routines[k];
     return isRoutineActiveNow(routine) ? renderRoutineCard(kid,k) : renderLockedRoutineCard(kid,k);
@@ -747,6 +832,7 @@ function renderKid(kidId){
     ${avatarPicker}
     ${isRestDay?'<div class="rest-banner">😌 Today\'s a rest day — routines are optional!</div>':''}
     ${renderTrail(kid)}
+    ${renderPrizesPanel(kid)}
     <button class="btn btn-ghost" style="width:100%;margin-bottom:16px" data-goto-history="${kid.id}">📅 This week</button>
     ${cards}
   </div>`;
@@ -936,14 +1022,25 @@ function renderParentPrizes(){
       <button class="remove-x" data-removeprize="${i}">✕</button>
     </div>
   `).join('');
+  const claimedSections = CONFIG.kids.map(k=>{
+    const log = (PRIZES_LOG[k.id]||[]).slice().reverse();
+    if(!log.length) return '';
+    const rows = log.map(e=>`
+      <div class="trophy-row">
+        <span>🏆</span><span style="flex:1">${esc(e.reward)} <span class="prize-status">(${e.threshold}⭐)</span></span>
+        <span class="trophy-date">${e.date}</span>
+      </div>`).join('');
+    return `<div class="panel-section"><h3>${k.avatar} ${esc(k.name)}'s claimed prizes</h3>${rows}</div>`;
+  }).join('');
   return `
   <div class="panel-section">
     <h3>Prize milestones</h3>
-    <p class="hint">Set how many stars unlock each reward.</p>
+    <p class="hint">Set how many stars unlock each reward. Kids choose when to claim from their own screen.</p>
     ${rows}
     <button class="add-task-btn" data-addprize="1">+ Add prize tier</button>
     <div style="margin-top:14px"><button class="btn btn-primary" data-saveprizes="1">Save prizes</button></div>
-  </div>`;
+  </div>
+  ${claimedSections}`;
 }
 function renderParentMode(){
   const isRestDay = CONFIG.restDayDate === todayStr();
@@ -1097,6 +1194,25 @@ function wireEvents(){
       const delta = parseInt(el.dataset.adjstar);
       STARS[kidId] = Math.max(0,(STARS[kidId]||0)+delta);
       await storeSet('stars:'+kidId, STARS[kidId]);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-claimprize]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [kidId, thresholdStr] = el.dataset.claimprize.split(':');
+      const threshold = parseInt(thresholdStr);
+      const kid = CONFIG.kids.find(k=>k.id===kidId);
+      const prize = (CONFIG.prizes||[]).find(p=>p.threshold===threshold);
+      if(!kid || !prize) return;
+      if(!confirm(`Claim "${prize.reward}" for ${threshold} stars?`)) return;
+      STARS[kidId] = Math.max(0, (STARS[kidId]||0) - threshold);
+      if(!PRIZES_LOG[kidId]) PRIZES_LOG[kidId] = [];
+      PRIZES_LOG[kidId].push({date: todayStr(), reward: prize.reward, threshold});
+      await storeSetMulti({
+        ['stars:'+kidId]: STARS[kidId],
+        ['prizesLog:'+kidId]: PRIZES_LOG[kidId]
+      });
+      celebrate(`🏆 Claimed: ${prize.reward}!`);
       render();
     };
   });
@@ -1306,7 +1422,7 @@ async function toggleTask(kidId, routineKey, taskId, el){
 
     // perfect-day bonus check
     if(kid){
-      const keys = currentRoutineKeys();
+      const keys = displayRoutineKeysForToday();
       let total=0, done=0;
       for(const rk of keys){
         const visible = (CONFIG.routines[rk].tasks||[]).filter(t=>!t.visibleTo||t.visibleTo==='both'||t.visibleTo===kidId);
