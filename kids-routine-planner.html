@@ -718,6 +718,7 @@ function render(){
   if(state.screen==='home') app.innerHTML = renderHome();
   else if(state.screen==='kid') app.innerHTML = renderKid(state.kidId);
   else if(state.screen==='history') app.innerHTML = renderKidHistory(state.kidId);
+  else if(state.screen==='deductions') app.innerHTML = renderKidDeductions(state.kidId);
   else if(state.screen==='avatarbuilder') app.innerHTML = renderAvatarBuilder(state.kidId);
   else if(state.screen==='lock') app.innerHTML = renderLock();
   else if(state.screen==='parent') app.innerHTML = renderParent();
@@ -929,6 +930,7 @@ function renderKid(kidId){
     ${renderTrail(kid)}
     ${renderPrizesPanel(kid)}
     <button class="btn btn-ghost" style="width:100%;margin-bottom:16px" data-goto-history="${kid.id}">📅 This week</button>
+    ${(BEHAVIOR_LOG[kid.id]&&BEHAVIOR_LOG[kid.id].length) ? `<button class="btn btn-ghost" style="width:100%;margin-bottom:16px" data-goto-deductions="${kid.id}">⚠️ Deductions</button>` : ''}
     ${cards}
   </div>`;
 }
@@ -951,6 +953,31 @@ function renderKidHistory(kidId){
     <div class="trail-card">
       <h3>Stars earned each day</h3>
       ${renderWeekBars(kid.id)}
+    </div>
+  </div>`;
+}
+function renderKidDeductions(kidId){
+  const kid = CONFIG.kids.find(k=>k.id===kidId);
+  if(!kid) return renderHome();
+  const log = (BEHAVIOR_LOG[kid.id]||[]).slice().reverse();
+  const rows = log.map(e=>`
+    <div class="trophy-row">
+      <span>⚠️</span><span style="flex:1">${esc(e.reason)} <span class="prize-status">(-${e.amount}⭐)</span></span>
+      <span class="trophy-date">${e.date}</span>
+    </div>`).join('');
+  return `
+  <div class="screen">
+    <div class="kid-topbar">
+      <button class="back-btn" data-goto-kid="${kid.id}">←</button>
+      <div class="kid-id">
+        <span class="avatar-sm">${renderAvatar(kid,30)}</span>
+        <h2>${esc(kid.name)}'s deductions</h2>
+      </div>
+      <span style="width:40px"></span>
+    </div>
+    <div class="trail-card">
+      <h3>Stars taken away</h3>
+      ${rows || '<p class="muted">Nothing here — clean record! ✨</p>'}
     </div>
   </div>`;
 }
@@ -1285,6 +1312,9 @@ function wireEvents(){
   });
   document.querySelectorAll('[data-goto-history]').forEach(el=>{
     el.onclick = ()=>{ state.kidId = el.dataset.gotoHistory; state.screen='history'; render(); };
+  });
+  document.querySelectorAll('[data-goto-deductions]').forEach(el=>{
+    el.onclick = ()=>{ state.kidId = el.dataset.gotoDeductions; state.screen='deductions'; render(); };
   });
   document.querySelectorAll('[data-toggleavatar]').forEach(el=>{
     el.onclick = ()=>{ state.avatarPickerOpen = !state.avatarPickerOpen; render(); };
