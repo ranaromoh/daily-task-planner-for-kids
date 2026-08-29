@@ -282,6 +282,11 @@
   .week-total{text-align:center;font-family:'Baloo 2';font-size:15px;font-weight:700;margin-top:6px;}
   .note-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
   .note-row .note-date{width:64px;flex-shrink:0;font-size:12px;color:var(--text-dim);font-weight:700;}
+
+  /* time-gated routines */
+  .routine-card.locked-card{opacity:.55;padding-bottom:16px;}
+  .routine-card.locked-card .rprogress{color:var(--text-dim);font-weight:700;font-size:12.5px;}
+  .locked-msg{padding:6px 2px 2px;color:var(--text-dim);font-weight:700;font-size:14px;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -374,11 +379,11 @@ const DEFAULT_CONFIG = {
   pin: '0000',
   holidayMode: false,
   routineOrder: {
-    school: ['morning_school','afterschool_school','bedtime_school'],
+    school: ['morning_school','afterschool_school','afternoon_school','bedtime_school'],
     holiday: ['morning_holiday','afterschool_holiday','bedtime_holiday']
   },
   routines: {
-    morning_school:  {label:'Morning Routine', tasks:[
+    morning_school:  {label:'Morning Routine', startTime:'06:00', endTime:'08:00', tasks:[
       {id:'t1', icon:'⏰', label:'Wake up'},
       {id:'t2', icon:'🪥', label:'Brush teeth'},
       {id:'t3', icon:'👕', label:'Get dressed'},
@@ -386,32 +391,38 @@ const DEFAULT_CONFIG = {
       {id:'t5', icon:'🎒', label:'Pack school bag'},
       {id:'t6', icon:'👟', label:'Put on shoes'}
     ]},
-    morning_holiday: {label:'Morning Routine', tasks:[
+    morning_holiday: {label:'Morning Routine', startTime:'10:00', endTime:'12:00', tasks:[
       {id:'t1', icon:'⏰', label:'Wake up'},
       {id:'t2', icon:'🪥', label:'Brush teeth'},
       {id:'t3', icon:'👕', label:'Get dressed'},
       {id:'t4', icon:'🥣', label:'Eat breakfast'}
     ]},
-    afterschool_school: {label:'After School', tasks:[
+    afterschool_school: {label:'After School', startTime:'11:00', endTime:'14:00', tasks:[
       {id:'t1', icon:'🧼', label:'Wash hands'},
       {id:'t2', icon:'🍎', label:'Have a snack'},
       {id:'t3', icon:'📚', label:'Homework / reading'},
       {id:'t4', icon:'🎒', label:'Tidy school bag'},
       {id:'t5', icon:'🧸', label:'Free play'}
     ]},
-    afterschool_holiday: {label:'Afternoon', tasks:[
+    afternoon_school: {label:'Afternoon', startTime:'14:30', endTime:'20:30', tasks:[
+      {id:'t1', icon:'📖', label:'Reading time'},
+      {id:'t2', icon:'🎨', label:'Hobby / activity time'},
+      {id:'t3', icon:'🍽️', label:'Help set the table'},
+      {id:'t4', icon:'🧹', label:'Tidy room'}
+    ]},
+    afterschool_holiday: {label:'Afternoon', startTime:'13:00', endTime:'18:00', tasks:[
       {id:'t1', icon:'🧸', label:'Free play'},
       {id:'t2', icon:'🧩', label:'Reading or puzzle time'},
       {id:'t3', icon:'🧹', label:'Tidy up toys'}
     ]},
-    bedtime_school: {label:'Bedtime Routine', tasks:[
+    bedtime_school: {label:'Bedtime Routine', startTime:'20:45', endTime:'21:15', tasks:[
       {id:'t1', icon:'🎒', label:'Pack bag for tomorrow'},
       {id:'t2', icon:'🛁', label:'Bath / shower'},
       {id:'t3', icon:'🪥', label:'Brush teeth'},
       {id:'t4', icon:'🌙', label:'Put on pajamas'},
       {id:'t5', icon:'💤', label:'Lights out on time'}
     ]},
-    bedtime_holiday: {label:'Bedtime Routine', tasks:[
+    bedtime_holiday: {label:'Bedtime Routine', startTime:'21:00', endTime:'22:00', tasks:[
       {id:'t1', icon:'🛁', label:'Bath / shower'},
       {id:'t2', icon:'🪥', label:'Brush teeth'},
       {id:'t3', icon:'🌙', label:'Put on pajamas'},
@@ -435,8 +446,76 @@ let state = { screen:'home', kidId:null, parentTab:'kids', pinBuffer:'', avatarP
 
 const AVATAR_CHOICES = ['🦊','🐻','🐼','🐰','🦁','🐯','🐨','🐸','🦄','🐶','🐱','🦋'];
 
-const ROUTINE_KEYS_SCHOOL = ['morning_school','afterschool_school','bedtime_school'];
+const ROUTINE_KEYS_SCHOOL = ['morning_school','afterschool_school','afternoon_school','bedtime_school'];
 const ROUTINE_KEYS_HOLIDAY = ['morning_holiday','afterschool_holiday','bedtime_holiday'];
+
+const SCHEDULE_DEFAULTS = {
+  morning_school:      {start:'06:00', end:'08:00'},
+  afterschool_school:  {start:'11:00', end:'14:00'},
+  afternoon_school:    {start:'14:30', end:'20:30'},
+  bedtime_school:       {start:'20:45', end:'21:15'},
+  morning_holiday:      {start:'10:00', end:'12:00'},
+  afterschool_holiday:  {start:'13:00', end:'18:00'},
+  bedtime_holiday:      {start:'21:00', end:'22:00'}
+};
+
+function isWeekendToday(){
+  const d = new Date().getDay(); // 0=Sun...5=Fri,6=Sat
+  return d===5 || d===6;
+}
+function effectiveHolidayMode(){
+  return !!CONFIG.holidayMode || isWeekendToday();
+}
+function timeToMinutes(hhmm){
+  const [h,m] = hhmm.split(':').map(Number);
+  return h*60+m;
+}
+function currentMinutes(){
+  const d = new Date();
+  return d.getHours()*60 + d.getMinutes();
+}
+function fmtTime12(hhmm){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  const period = h<12 ? 'AM' : 'PM';
+  let h12 = h % 12; if(h12===0) h12 = 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+function isRoutineActiveNow(routine){
+  if(!routine.startTime || !routine.endTime) return true;
+  const now = currentMinutes();
+  return now >= timeToMinutes(routine.startTime) && now <= timeToMinutes(routine.endTime);
+}
+function migrateConfig(cfg){
+  let changed = false;
+  if(!cfg.routineOrder){
+    cfg.routineOrder = { school: ROUTINE_KEYS_SCHOOL.slice(), holiday: ROUTINE_KEYS_HOLIDAY.slice() };
+    changed = true;
+  }
+  if(!cfg.routines.afternoon_school){
+    cfg.routines.afternoon_school = {label:'Afternoon', startTime:'14:30', endTime:'20:30', tasks:[
+      {id:'t1', icon:'📖', label:'Reading time'},
+      {id:'t2', icon:'🎨', label:'Hobby / activity time'},
+      {id:'t3', icon:'🍽️', label:'Help set the table'},
+      {id:'t4', icon:'🧹', label:'Tidy room'}
+    ]};
+    changed = true;
+  }
+  if(!cfg.routineOrder.school.includes('afternoon_school')){
+    const idx = cfg.routineOrder.school.indexOf('afterschool_school');
+    if(idx>=0) cfg.routineOrder.school.splice(idx+1, 0, 'afternoon_school');
+    else cfg.routineOrder.school.push('afternoon_school');
+    changed = true;
+  }
+  for(const key in SCHEDULE_DEFAULTS){
+    if(cfg.routines[key] && (!cfg.routines[key].startTime || !cfg.routines[key].endTime)){
+      cfg.routines[key].startTime = SCHEDULE_DEFAULTS[key].start;
+      cfg.routines[key].endTime = SCHEDULE_DEFAULTS[key].end;
+      changed = true;
+    }
+  }
+  return changed;
+}
 
 function todayStr(){
   const d = new Date();
@@ -461,6 +540,8 @@ function progressKey(kidId){ return 'progress:'+kidId+':'+todayStr(); }
 
 async function init(){
   CONFIG = await storeGet('family-config', DEFAULT_CONFIG);
+  const migrated = migrateConfig(CONFIG);
+  if(migrated) await storeSet('family-config', CONFIG);
   for(const kid of CONFIG.kids){
     STARS[kid.id] = await storeGet('stars:'+kid.id, 0);
     PROGRESS[kid.id] = await storeGet(progressKey(kid.id), {});
@@ -519,7 +600,7 @@ function renderHome(){
     <div class="home-header">
       <div class="eyebrow">Star Trail</div>
       <h1>Who's checking in?</h1>
-      <p>${CONFIG.holidayMode ? 'Holiday mode is on ☀️' : 'School day routines 🎒'}</p>
+      <p>${effectiveHolidayMode() ? 'Holiday mode ☀️' : 'School day routines 🎒'}</p>
     </div>
     <div class="kid-cards">${cards}</div>
     <button class="parent-link" data-goto="lock">🔒 Parent settings</button>
@@ -531,7 +612,7 @@ function currentRoutineKeys(){
   if(!CONFIG.routineOrder){
     CONFIG.routineOrder = { school: ROUTINE_KEYS_SCHOOL.slice(), holiday: ROUTINE_KEYS_HOLIDAY.slice() };
   }
-  return CONFIG.holidayMode ? CONFIG.routineOrder.holiday : CONFIG.routineOrder.school;
+  return effectiveHolidayMode() ? CONFIG.routineOrder.holiday : CONFIG.routineOrder.school;
 }
 function renderTrail(kid){
   const total = STARS[kid.id]||0;
@@ -612,11 +693,35 @@ function renderRoutineCard(kid, routineKey){
     <ul class="task-list">${items}</ul>
   </div>`;
 }
+function renderLockedRoutineCard(kid, routineKey){
+  const r = CONFIG.routines[routineKey];
+  const prog = PROGRESS[kid.id] || {};
+  const visibleTasks = (r.tasks||[]).filter(t=>!t.visibleTo || t.visibleTo==='both' || t.visibleTo===kid.id);
+  const doneCount = visibleTasks.filter(t=>prog[routineKey+'::'+t.id]).length;
+  const now = currentMinutes();
+  const start = r.startTime ? timeToMinutes(r.startTime) : null;
+  const upcoming = start!==null && now < start;
+  const window = (r.startTime && r.endTime) ? `${fmtTime12(r.startTime)}–${fmtTime12(r.endTime)}` : '';
+  const msg = upcoming
+    ? `🔒 Opens at ${fmtTime12(r.startTime)}`
+    : (doneCount>0 ? `✅ ${doneCount}/${visibleTasks.length} done earlier` : `⏳ Closed for today`);
+  return `
+  <div class="routine-card locked-card">
+    <div class="rhead">
+      <h3>${esc(r.label)}</h3>
+      <span class="rprogress">${window}</span>
+    </div>
+    <div class="locked-msg">${msg}</div>
+  </div>`;
+}
 function renderKid(kidId){
   const kid = CONFIG.kids.find(k=>k.id===kidId);
   if(!kid) return renderHome();
   const keys = currentRoutineKeys();
-  const cards = keys.map(k=>renderRoutineCard(kid,k)).join('');
+  const cards = keys.map(k=>{
+    const routine = CONFIG.routines[k];
+    return isRoutineActiveNow(routine) ? renderRoutineCard(kid,k) : renderLockedRoutineCard(kid,k);
+  }).join('');
   const streak = (STREAK[kid.id] && STREAK[kid.id].count) || 0;
   const isRestDay = CONFIG.restDayDate === todayStr();
   const avatarPicker = state.avatarPickerOpen ? `
@@ -631,7 +736,7 @@ function renderKid(kidId){
         <button class="avatar-sm-btn" data-toggleavatar="1">${kid.avatar}</button>
         <div>
           <h2>${esc(kid.name)}</h2>
-          <span class="pill mode-pill">${CONFIG.holidayMode?'☀️ Holiday':'🎒 School day'}</span>
+          <span class="pill mode-pill">${effectiveHolidayMode()?'☀️ Holiday':'🎒 School day'}</span>
         </div>
       </div>
       <div class="row" style="gap:8px">
@@ -723,7 +828,8 @@ function renderLock(){
 /* ---------------- PARENT PANEL ---------------- */
 const ROUTINE_ORDER = [
   ['morning_school','Morning · School'], ['morning_holiday','Morning · Holiday'],
-  ['afterschool_school','After School'], ['afterschool_holiday','Afternoon · Holiday'],
+  ['afterschool_school','After School'], ['afternoon_school','Afternoon · School'],
+  ['afterschool_holiday','Afternoon · Holiday'],
   ['bedtime_school','Bedtime · School'], ['bedtime_holiday','Bedtime · Holiday']
 ];
 function renderParent(){
@@ -805,9 +911,18 @@ function renderParentRoutines(){
   `).join('');
   return renderRoutineOrderSection() + `
   <div class="panel-section">
-    <h3>Edit routine tasks</h3>
-    <p class="hint">Tap a routine to edit its checklist. Icon can be any emoji. The dropdown controls who sees each task — Both, or just one kid.</p>
+    <h3>Active time window</h3>
+    <p class="hint">Kids can only see and check off this routine during this window. Tap a chip above to switch routines first.</p>
     <div class="routine-select">${chips}</div>
+    <div class="field-row">
+      <div class="field"><label>Opens</label><input type="time" id="startTimeInput" value="${routine.startTime||''}"></div>
+      <div class="field"><label>Closes</label><input type="time" id="endTimeInput" value="${routine.endTime||''}"></div>
+    </div>
+    <button class="btn btn-primary" data-savetime="${key}">Save time window</button>
+  </div>
+  <div class="panel-section">
+    <h3>Edit routine tasks</h3>
+    <p class="hint">Icon can be any emoji. The dropdown controls who sees each task — Both, or just one kid.</p>
     <div data-taskrows>${rows}</div>
     <button class="add-task-btn" data-addtask="${key}">+ Add task</button>
     <div style="margin-top:14px"><button class="btn btn-primary" data-saveroutine="${key}">Save routine</button></div>
@@ -835,9 +950,9 @@ function renderParentMode(){
   return `
   <div class="panel-section">
     <h3>Holiday mode</h3>
-    <p class="hint">Switches both kids' routines between school-day and holiday versions.</p>
+    <p class="hint">Friday & Saturday switch to holiday routines automatically. Use this to force holiday mode on an extra day off (e.g. Eid).</p>
     <div class="toggle-row">
-      <span>${CONFIG.holidayMode?'Holiday routines active ☀️':'School-day routines active 🎒'}</span>
+      <span>${CONFIG.holidayMode?'Holiday forced on 🔒☀️':(isWeekendToday()?'Weekend — holiday routines active ☀️':'School-day routines active 🎒')}</span>
       <div class="switch ${CONFIG.holidayMode?'on':''}" data-toggle="holidayMode"></div>
     </div>
   </div>
@@ -934,6 +1049,18 @@ function wireEvents(){
       });
       await storeSet('family-config', CONFIG);
       toast('Routine saved ✓');
+    };
+  });
+  document.querySelectorAll('[data-savetime]').forEach(el=>{
+    el.onclick = async ()=>{
+      const key = el.dataset.savetime;
+      const st = document.getElementById('startTimeInput');
+      const et = document.getElementById('endTimeInput');
+      if(!st.value || !et.value){ toast('Set both times'); return; }
+      CONFIG.routines[key].startTime = st.value;
+      CONFIG.routines[key].endTime = et.value;
+      await storeSet('family-config', CONFIG);
+      toast('Time window saved ✓');
     };
   });
   document.querySelectorAll('[data-addprize]').forEach(el=>{
