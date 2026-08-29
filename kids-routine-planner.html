@@ -1240,12 +1240,14 @@ function renderParentBehavior(){
       <button class="remove-x" data-removereason="${i}">✕</button>
     </div>`).join('');
   const logSections = CONFIG.kids.map(k=>{
-    const log = (BEHAVIOR_LOG[k.id]||[]).slice().reverse().slice(0,8);
-    if(!log.length) return '';
-    const rows = log.map(e=>`
+    const fullLog = BEHAVIOR_LOG[k.id]||[];
+    if(!fullLog.length) return '';
+    const recent = fullLog.map((e,i)=>({...e, idx:i})).slice(-8).reverse();
+    const rows = recent.map(e=>`
       <div class="trophy-row">
         <span>⚠️</span><span style="flex:1">${esc(e.reason)} <span class="prize-status">(-${e.amount}⭐)</span></span>
         <span class="trophy-date">${e.date}</span>
+        <button class="remove-x" style="width:28px;height:28px;font-size:12px" data-undodeduct="${k.id}:${e.idx}" title="Undo">↺</button>
       </div>`).join('');
     return `<div class="panel-section"><h3>${k.avatar} ${esc(k.name)}'s recent deductions</h3>${rows}</div>`;
   }).join('');
@@ -1458,6 +1460,23 @@ function wireEvents(){
       const delta = parseInt(el.dataset.adjstar);
       STARS[kidId] = Math.max(0,(STARS[kidId]||0)+delta);
       await storeSet('stars:'+kidId, STARS[kidId]);
+      render();
+    };
+  });
+  document.querySelectorAll('[data-undodeduct]').forEach(el=>{
+    el.onclick = async ()=>{
+      const [kidId, idxStr] = el.dataset.undodeduct.split(':');
+      const idx = parseInt(idxStr);
+      const entry = (BEHAVIOR_LOG[kidId]||[])[idx];
+      if(!entry) return;
+      if(!confirm(`Undo this deduction? ${entry.amount} stars will be given back.`)) return;
+      STARS[kidId] = (STARS[kidId]||0) + entry.amount;
+      BEHAVIOR_LOG[kidId].splice(idx,1);
+      await storeSetMulti({
+        ['stars:'+kidId]: STARS[kidId],
+        ['behaviorLog:'+kidId]: BEHAVIOR_LOG[kidId]
+      });
+      toast('Deduction undone ✓');
       render();
     };
   });
