@@ -211,6 +211,8 @@
   }
   .save-toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="starfield"></div>
@@ -218,17 +220,64 @@
 <div class="save-toast" id="toast">Saved ✓</div>
 
 <script>
-/* ---------------- storage helpers (localStorage, works standalone/GitHub Pages) ---------------- */
+/* ---------------- storage helpers ----------------
+   Paste your Firebase config below to enable live syncing across devices.
+   Until you do, the app falls back to this-device-only storage (localStorage). */
+const firebaseConfig = {
+  apiKey: "AIzaSyBzn8-Wz5L19b7ENiN5yxn9BNAvTbAgDI0",
+  authDomain: "star-trail-kids.firebaseapp.com",
+  databaseURL: "https://star-trail-kids-default-rtdb.firebaseio.com",
+  projectId: "star-trail-kids"
+};
+
+let fbDB = null;
+try{
+  if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY" && window.firebase){
+    firebase.initializeApp(firebaseConfig);
+    fbDB = firebase.database();
+  }
+}catch(e){ console.error('Firebase init failed, falling back to local storage', e); }
+
 const STORAGE_PREFIX = 'starTrail:';
+function keyToPath(key){ return 'starTrail/' + key.replace(/:/g,'__'); }
+
 async function storeGet(key, fallback){
+  if(fbDB){
+    try{
+      const snap = await fbDB.ref(keyToPath(key)).once('value');
+      const val = snap.val();
+      return (val===null || val===undefined) ? fallback : val;
+    }catch(e){ return fallback; }
+  }
   try{
     const raw = localStorage.getItem(STORAGE_PREFIX+key);
     return raw !== null ? JSON.parse(raw) : fallback;
   }catch(e){ return fallback; }
 }
 async function storeSet(key, value){
+  if(fbDB){
+    try{ await fbDB.ref(keyToPath(key)).set(value); return; }
+    catch(e){ console.error('firebase set failed', e); }
+  }
   try{ localStorage.setItem(STORAGE_PREFIX+key, JSON.stringify(value)); }
   catch(e){ console.error('storage set failed', e); }
+}
+
+function startLiveSync(){
+  if(!fbDB) return;
+  fbDB.ref('starTrail').on('value', (snap)=>{
+    if(state.screen==='parent' || state.screen==='lock') return; // don't disrupt active editing
+    const data = snap.val() || {};
+    const cfgRaw = data[('family-config').replace(/:/g,'__')];
+    if(cfgRaw) CONFIG = cfgRaw;
+    for(const kid of CONFIG.kids){
+      const starsRaw = data[('stars:'+kid.id).replace(/:/g,'__')];
+      STARS[kid.id] = (starsRaw===undefined||starsRaw===null) ? (STARS[kid.id]||0) : starsRaw;
+      const progRaw = data[(progressKey(kid.id)).replace(/:/g,'__')];
+      PROGRESS[kid.id] = progRaw || {};
+    }
+    render();
+  });
 }
 
 /* ---------------- defaults ---------------- */
@@ -313,6 +362,7 @@ async function init(){
   }
   buildStarfield();
   render();
+  startLiveSync();
 }
 function buildStarfield(){
   const el = document.getElementById('starfield');
